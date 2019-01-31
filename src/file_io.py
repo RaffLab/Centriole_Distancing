@@ -8,6 +8,29 @@ This module contains scripts for file input/output manipulation.
 import numpy as np 
 import image_fn
 
+def read_rgb(imgfile):
+    """Reads RGB image file
+
+    Parameters
+    ----------
+    imgfile : string
+        input file location.
+    
+    Returns
+    -------
+    img : numpy array
+        An image where the channels are stored in the third dimension, such that
+            (n_rows x n_cols): a gray-image.
+            (n_rows x n_cols x 3): an RGB-image. 
+            (n_rows x n_cols x 4): an RGBA-image.
+        
+    """
+    from skimage.io import imread
+    
+    img = imread(imgfile)
+    
+    return img
+
 def read_multiimg_PIL(tiffile):
     """Reads multipage .tif file
 

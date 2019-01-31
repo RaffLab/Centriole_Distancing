@@ -27,6 +27,44 @@ def uint16_2_uint8(vidstack):
     
     return uint8_img
 
+def rescale_intensity_stack(xstack):
+    
+    from skimage.exposure import rescale_intensity
+    
+    xx = np.concatenate([rescale_intensity(im)[None,:] for im in xstack], axis=0)
+    
+    return xx
+
+def resize_img_stack(img_stack, shape=(256,256)):
+    """ Resizes a series of images given as a (n_imgs x n_rows x n_cols x channels) tensor.
+
+    Parameters
+    ----------
+    img_stack : numpy array
+        an input image of 3 or 4 dimensions:
+            (n_imgs x n_rows x n_cols): gray-image stack
+            (n_imgs x n_rows x n_cols x 3): rgb-image stack
+    shape : 2-tuple
+        (row_size, col_size) tuple giving the desired output image dimension 
+
+    Returns
+    -------
+    img_stack_new : numpy array
+        a numpy array of resized input:
+            (n_imgs x shape[0] x shape[1]): gray-image stack
+            (n_imgs x shape[0] x shape[1] x 3): rgb-image stack
+
+    """
+    from skimage.transform import resize
+    img_stack_new = []
+
+    for im in imgs:
+        img_stack_new.append(resize(im, output_shape=shape)[None,:])
+    
+    img_stack_new = np.concatenate(imgs_, axis=0)
+    
+    return img_stack_new
+
 def denoise_zstack(zstack):
     
 #    from skimage.restoration import denoise_wavelet
