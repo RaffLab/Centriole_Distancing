@@ -1,0 +1,988 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>image_fn &mdash; Centriole Distancing 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Centriole Distancing
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../file_io.html">file_io module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">image_fn module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_fn.html">training_fn module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">visualization module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Centriole Distancing</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>image_fn</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for image_fn</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python2</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains scripts for image manipulation including denoising, enhancement and cropping functions</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="uint16_2_uint8"><a class="viewcode-back" href="../image_fn.html#image_fn.uint16_2_uint8">[docs]</a><span class="k">def</span> <span class="nf">uint16_2_uint8</span><span class="p">(</span><span class="n">vidstack</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Casts any input image to be of uint8 type. </span>
+
+<span class="sd">    Note: Though named uint16, converts any input to uint8. We are just implicitly assuming with biological imaging uint16 input.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vidstack : numpy array</span>
+<span class="sd">        an input image (any size) as a numpy array.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    uint8_img : numpy array</span>
+<span class="sd">        a numpy array of same size as input rescaled to be of uint8 (range [0,255]).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">uint8_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mf">255.</span><span class="o">*</span><span class="p">(</span><span class="n">vidstack</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">vidstack</span><span class="p">))))</span>
+    
+    <span class="k">return</span> <span class="n">uint8_img</span></div>
+
+<div class="viewcode-block" id="denoise_zstack"><a class="viewcode-back" href="../image_fn.html#image_fn.denoise_zstack">[docs]</a><span class="k">def</span> <span class="nf">denoise_zstack</span><span class="p">(</span><span class="n">zstack</span><span class="p">):</span>
+    
+<span class="c1">#    from skimage.restoration import denoise_wavelet</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
+    
+    <span class="n">stacked</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">zstack</span><span class="p">:</span>
+<span class="c1">#        stacked.append(denoise_wavelet(z)[None,:])</span>
+        <span class="n">stacked</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gaussian</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">3</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:])</span>
+        
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">stacked</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="perona_malik"><a class="viewcode-back" href="../image_fn.html#image_fn.perona_malik">[docs]</a><span class="k">def</span> <span class="nf">perona_malik</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">0.14</span><span class="p">,</span> <span class="n">kappa</span><span class="o">=</span><span class="mi">15</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot; Runs Perona-Malik anisotropic on a given grayscale image.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy array</span>
+<span class="sd">        (n_rows x n_cols) grayscale image.</span>
+<span class="sd">    iterations : int</span>
+<span class="sd">        Number of iterations to run the diffusion process. Higher gives smoother output.</span>
+<span class="sd">    delta : float</span>
+<span class="sd">        This is the time step :math:`\Delta t` in the diffusion equation. </span>
+<span class="sd">    kappa : float</span>
+<span class="sd">        This regulates the sensitivity to edges in the Perona-Malik formulation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filtered_img : numpy array</span>
+<span class="sd">        The filtered output image. Same size as input of type float.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Perona, P et. al, &quot;Anisotropic diffusion.&quot; Geometry-driven diffusion in computer vision. Springer, Dordrecht, 1994. 73-92.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">misc</span><span class="p">,</span> <span class="n">ndimage</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+    <span class="c1"># center pixel distances</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">dd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="n">u</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="c1"># 2D finite difference windows</span>
+    <span class="n">windows</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+    
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="c1"># approximate gradients</span>
+        <span class="n">nabla</span> <span class="o">=</span> <span class="p">[</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">windows</span> <span class="p">]</span>
+    
+        <span class="c1"># approximate diffusion function</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="p">[</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="n">kappa</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nabla</span><span class="p">]</span>
+
+        <span class="c1"># update image</span>
+        <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">nabla</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+        <span class="n">terms</span> <span class="o">+=</span> <span class="p">[(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">dd</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">diff</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">nabla</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">)]</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">u</span> <span class="o">+</span> <span class="n">delta</span><span class="o">*</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">terms</span><span class="p">))</span>
+
+    <span class="c1"># Kernel for Gradient in x-direction</span>
+    <span class="n">Kx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+    <span class="p">)</span>
+    <span class="c1"># Kernel for Gradient in y-direction</span>
+    <span class="n">Ky</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+    <span class="p">)</span>
+    <span class="c1"># Apply kernels to the image</span>
+    <span class="n">Ix</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">Kx</span><span class="p">)</span>
+    <span class="n">Iy</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">Ky</span><span class="p">)</span>
+    
+    <span class="c1"># return norm of (Ix, Iy)</span>
+    <span class="n">filtered_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">Ix</span><span class="p">,</span> <span class="n">Iy</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">filtered_img</span></div>
+    
+
+<div class="viewcode-block" id="crop_patches_from_img"><a class="viewcode-back" href="../image_fn.html#image_fn.crop_patches_from_img">[docs]</a><span class="k">def</span> <span class="nf">crop_patches_from_img</span><span class="p">(</span><span class="n">zstack</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">25</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Crop image patches from a given input image of given width at given (x,y) centroid coordinates.</span>
+
+<span class="sd">    Float centroids are first cast into ints.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    zstack : numpy array</span>
+<span class="sd">        input (n_rows x n_cols x n_channels) numpy array.</span>
+<span class="sd">    centroids : numpy array or list</span>
+<span class="sd">        array of (y,x) centroid coordinates</span>
+<span class="sd">    width : int (odd)</span>
+<span class="sd">        size of cropped image patch is (width x width x n_channels)</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    zs : numpy array</span>
+<span class="sd">        an array of cropped patches with length equal to the number of centroids.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">cent</span> <span class="ow">in</span> <span class="n">centroids</span><span class="p">:</span>
+        <span class="n">cent</span> <span class="o">=</span> <span class="n">cent</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">patch</span> <span class="o">=</span> <span class="n">zstack</span><span class="p">[:,</span><span class="n">cent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">width</span><span class="o">//</span><span class="mi">2</span><span class="p">:</span><span class="n">cent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">width</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="n">width</span><span class="p">,</span> <span class="n">cent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">width</span><span class="o">//</span><span class="mi">2</span><span class="p">:</span><span class="n">cent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">width</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="n">width</span><span class="p">][</span><span class="kc">None</span><span class="p">,:]</span>
+        <span class="n">zs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
+        
+    <span class="n">zs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">zs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">zs</span></div>
+
+
+<div class="viewcode-block" id="filter_masks"><a class="viewcode-back" href="../image_fn.html#image_fn.filter_masks">[docs]</a><span class="k">def</span> <span class="nf">filter_masks</span><span class="p">(</span> <span class="n">mask</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
+    
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
+    
+    <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+    <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniq_reg</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">area</span> <span class="o">&gt;</span> <span class="n">min_area</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">area</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mask</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+            
+    <span class="k">else</span><span class="p">:</span>
+    
+        <span class="n">reg</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
+        <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+        
+        <span class="n">areas</span> <span class="o">=</span> <span class="p">[]</span>
+    
+        <span class="k">for</span> <span class="n">re</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">:</span>
+            <span class="n">areas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
+            
+        <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">areas</span><span class="p">)]</span>
+                               
+        <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">labelled</span> <span class="o">==</span> <span class="n">largest_reg</span>
+        
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_area</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cand_mask</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span></div>
+    
+
+<div class="viewcode-block" id="filter_masks_centre"><a class="viewcode-back" href="../image_fn.html#image_fn.filter_masks_centre">[docs]</a><span class="k">def</span> <span class="nf">filter_masks_centre</span><span class="p">(</span> <span class="n">mask</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
+    
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
+    
+
+    <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+    <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">mask_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">nrows</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniq_reg</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">area</span> <span class="o">&gt;</span> <span class="n">min_area</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">area</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mask</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+            
+    <span class="k">else</span><span class="p">:</span>
+    
+        <span class="n">reg</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
+        <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+        
+        <span class="n">areas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">centres</span> <span class="o">=</span> <span class="p">[]</span>
+    
+        <span class="k">for</span> <span class="n">re</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">:</span>
+            <span class="n">y</span><span class="p">,</span><span class="n">x</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">centroid</span>
+            <span class="n">areas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
+            <span class="n">centres</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">])</span>
+            
+        <span class="n">centres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centres</span><span class="p">)</span>
+        <span class="n">centre_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">centres</span> <span class="o">-</span> <span class="n">mask_centre</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
+        <span class="n">min_dist</span> <span class="o">=</span> <span class="n">centre_dist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
+                               
+        <span class="k">if</span> <span class="n">min_dist</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="o">/</span><span class="mf">2.</span><span class="o">*</span> <span class="n">nrows</span><span class="o">/</span><span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>              
+            <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">labelled</span> <span class="o">==</span> <span class="n">largest_reg</span>
+            
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_area</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cand_mask</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="find_best_focus"><a class="viewcode-back" href="../image_fn.html#image_fn.find_best_focus">[docs]</a><span class="k">def</span> <span class="nf">find_best_focus</span><span class="p">(</span><span class="n">zstack</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Finds the best focus slice by finding the z-slice that maximises the signal-to-noise ratio given by coefficient of variation (CV).</span>
+<span class="sd">    </span>
+<span class="sd">    .. math:: CV = \sigma/\mu</span>
+
+<span class="sd">    where :math:`\sigma` and :math:`\mu` are the standard deviation and mean of the slice pixel intensities.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    zstack : numpy array</span>
+<span class="sd">        an input (n_z x n_rows x n_cols) image.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    best_focus_slice : int</span>
+<span class="sd">        index of the z-slice of best focus.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">focus_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">zstack</span><span class="p">]</span>
+    <span class="n">best_focus_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">focus_vals</span><span class="p">)</span>
+                  
+    <span class="k">return</span> <span class="n">best_focus_slice</span></div>
+
+    
+<div class="viewcode-block" id="find_best_focus_stacks"><a class="viewcode-back" href="../image_fn.html#image_fn.find_best_focus_stacks">[docs]</a><span class="k">def</span> <span class="nf">find_best_focus_stacks</span><span class="p">(</span><span class="n">zstacks</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Finds the best focus slice of a series of z-slice stacks and constructs an array composed of the best-focus slices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    zstacks : numpy array</span>
+<span class="sd">        an input (n_stacks x n_z x n_rows x n_cols) image.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    best_focus_imgs : numpy array</span>
+<span class="sd">        a new numpy array (n_stacks x n_rows x n_cols) composed of the best-focus slices only.</span>
+<span class="sd">    best_focus_slices : numpy array</span>
+<span class="sd">        list of the index of the z-slice of best focus for each z-slice stack.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">best_focus_imgs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">best_focus_slices</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">zstack</span> <span class="ow">in</span> <span class="n">zstacks</span><span class="p">:</span>
+        
+        <span class="n">best_slice</span> <span class="o">=</span> <span class="n">find_best_focus</span><span class="p">(</span><span class="n">zstack</span><span class="p">)</span>
+        <span class="n">best_focus_img</span> <span class="o">=</span> <span class="n">zstack</span><span class="p">[</span><span class="n">best_slice</span><span class="p">]</span>
+        
+        <span class="n">best_focus_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">best_slice</span><span class="p">)</span> <span class="c1"># the best slice is needed to provide the slice to retrieve in the original video. </span>
+        <span class="n">best_focus_imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">best_focus_img</span><span class="p">[</span><span class="kc">None</span><span class="p">,:])</span>
+        
+    <span class="n">best_focus_imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">best_focus_imgs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">best_focus_slices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">best_focus_slices</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">best_focus_imgs</span><span class="p">,</span> <span class="n">best_focus_slices</span></div>
+
+
+<div class="viewcode-block" id="locate_centroids_simple"><a class="viewcode-back" href="../image_fn.html#image_fn.locate_centroids_simple">[docs]</a><span class="k">def</span> <span class="nf">locate_centroids_simple</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot; Given an image, locates all centroids of connected components.</span>
+
+<span class="sd">    Note: This function inherently assumes a threshold of 0 and dilation with disk kernel of 3.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mask : numpy array</span>
+<span class="sd">        an input grayscale image.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    centroids : numpy array</span>
+<span class="sd">        an array of (y,x) coordinate pairs giving the peaks in the input image.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
+    <span class="kn">from</span> <span class="nn">skimage.morphology</span> <span class="k">import</span> <span class="n">binary_dilation</span><span class="p">,</span> <span class="n">disk</span>
+    
+    <span class="n">centroids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">mask_</span> <span class="o">=</span> <span class="n">mask</span><span class="o">&gt;</span><span class="mi">0</span>
+    <span class="n">mask_</span> <span class="o">=</span> <span class="n">binary_dilation</span><span class="p">(</span><span class="n">mask_</span><span class="p">,</span> <span class="n">disk</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+    <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">mask_</span><span class="p">)</span>
+    <span class="n">regions</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">regions</span><span class="p">:</span>
+        <span class="n">y</span><span class="p">,</span><span class="n">x</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">centroid</span>
+        <span class="n">centroids</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">])</span>
+    <span class="n">centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centroids</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">centroids</span></div>
+
+<div class="viewcode-block" id="produce_valid_img_mask"><a class="viewcode-back" href="../image_fn.html#image_fn.produce_valid_img_mask">[docs]</a><span class="k">def</span> <span class="nf">produce_valid_img_mask</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">min_I</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">dilation</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Example Centriole images may have a ring of high pixel intensity of a much larger structure. This function is designed to identify such large continuous areas in order to filter detections.</span>
+<span class="sd">     </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy array</span>
+<span class="sd">        an input grayscale image.</span>
+<span class="sd">    min_I : float</span>
+<span class="sd">        the lower threshold for identifying the bright intensity regions. Assumes normalised intensities i.e. image intensities should be between [0,1] </span>
+<span class="sd">    max_area : integer</span>
+<span class="sd">        threshold for identifying &#39;large&#39; region based on counting the number of pixels within the area.</span>
+<span class="sd">    dilation : int</span>
+<span class="sd">        size of the disk kernel used to postprocess and smoothen resulting binary segmentation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    invalid_regions : numpy array</span>
+<span class="sd">        a binary image of either 0, 1 pixel intensities indicating the large regions of high intensity i.e. invalid centriole zones.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">scipy.ndimage.morphology</span> <span class="k">import</span> <span class="n">binary_fill_holes</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">threshold_otsu</span>
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
+    <span class="kn">from</span> <span class="nn">skimage.morphology</span> <span class="k">import</span> <span class="n">binary_dilation</span><span class="p">,</span> <span class="n">disk</span>
+    
+    <span class="n">thresh</span> <span class="o">=</span> <span class="n">threshold_otsu</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="c1"># determines an Ostu threshold.</span>
+    
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="n">img</span><span class="o">&gt;</span><span class="n">thresh</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">min_I</span><span class="p">:</span> <span class="c1"># is there signal in the image? which is the lower / better threshold to use.</span>
+        <span class="n">binary</span> <span class="o">=</span> <span class="n">img</span> <span class="o">&gt;</span> <span class="n">thresh</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">binary</span> <span class="o">=</span> <span class="n">img</span> <span class="o">&gt;</span> <span class="n">min_I</span> <span class="c1"># resort to the manual guidance.</span>
+        
+    <span class="c1"># connected component analysis to identify large areas of high intensity.</span>
+    <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">binary</span><span class="p">)</span>
+    <span class="n">regions</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
+    
+    <span class="c1"># initialise the mask</span>
+    <span class="n">invalid_regions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">labelled</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">regions</span><span class="p">)):</span>
+        <span class="n">area</span> <span class="o">=</span> <span class="n">regions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">area</span>
+        <span class="c1"># is it large?, if yes </span>
+        <span class="k">if</span> <span class="n">area</span> <span class="o">&gt;</span> <span class="n">max_area</span><span class="p">:</span>
+            <span class="n">invalid_regions</span><span class="p">[</span><span class="n">labelled</span><span class="o">==</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># mark areas that satisfy the check to background</span>
+            
+    <span class="n">invalid_regions</span> <span class="o">=</span> <span class="n">binary_dilation</span><span class="p">(</span><span class="n">binary_fill_holes</span><span class="p">(</span><span class="n">invalid_regions</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">),</span> <span class="n">disk</span><span class="p">(</span><span class="n">dilation</span><span class="p">))</span> <span class="c1"># dilation is to smooth edges.</span>
+
+    <span class="k">return</span> <span class="n">invalid_regions</span></div>
+    
+<div class="viewcode-block" id="filter_noise_centroids_detection"><a class="viewcode-back" href="../image_fn.html#image_fn.filter_noise_centroids_detection">[docs]</a><span class="k">def</span> <span class="nf">filter_noise_centroids_detection</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Given (y,x) coordinates and a binary mask of 0,1 of background regions, removes coordinates that lie in 1 areas (background).</span>
+<span class="sd">     </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centroids : numpy array</span>
+<span class="sd">        array of (y,x) 2D coordinates.</span>
+<span class="sd">    mask : numpy array</span>
+<span class="sd">        boolean or integer mask with values 1 or 0 denoting invalid and valid spatial regions respectively.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filtered_centroids : numpy array</span>
+<span class="sd">        array of only valid (y,x) 2D coordinates that lie in mask==0 regions.</span>
+<span class="sd">    select : bool array</span>
+<span class="sd">        a binary array either 0 or 1 indicating which centroids are valid.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">valid_mask</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[</span><span class="n">centroids</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">),</span> <span class="n">centroids</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)]</span> <span class="c1">#(y,x) format</span>
+    <span class="n">filtered_centroids</span> <span class="o">=</span> <span class="n">centroids</span><span class="p">[</span><span class="n">valid_mask</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">select</span> <span class="o">=</span> <span class="n">valid_mask</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">filtered_centroids</span><span class="p">,</span> <span class="n">select</span></div>
+    
+<div class="viewcode-block" id="filter_border_centroids_detection"><a class="viewcode-back" href="../image_fn.html#image_fn.filter_border_centroids_detection">[docs]</a><span class="k">def</span> <span class="nf">filter_border_centroids_detection</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">limits</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Given (y,x) coordinates and the size of the border, removes all coordinates that lie within the defined border.</span>
+<span class="sd">     </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centroids : numpy array</span>
+<span class="sd">        array of (y,x) 2D coordinates.</span>
+<span class="sd">    size : int</span>
+<span class="sd">        border size, how many pixels from the image edge do you consider the border. Isotropic border is assumed.</span>
+<span class="sd">    limits : tuple-like</span>
+<span class="sd">        (y_max, x_max) pair that define the maximum number of rows, columns respectively of the image.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filtered_centroids : numpy array</span>
+<span class="sd">        array of only valid (y,x) 2D coordinates that do not lie in the border zone.</span>
+<span class="sd">    select : bool array</span>
+<span class="sd">        a binary array either 0 or 1 indicating which centroids lie within the border zone.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">select_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">centroids</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">size</span><span class="p">,</span> <span class="n">centroids</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">select_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">centroids</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">size</span><span class="p">,</span> <span class="n">centroids</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">size</span><span class="p">)</span>
+    
+    <span class="n">filtered_centroids</span> <span class="o">=</span> <span class="n">centroids</span><span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">select_x</span><span class="p">,</span> <span class="n">select_y</span><span class="p">)]</span>
+    <span class="n">select</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">select_x</span><span class="p">,</span> <span class="n">select_y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">filtered_centroids</span><span class="p">,</span> <span class="n">select</span></div>
+ 
+<div class="viewcode-block" id="filter_centrioles_BCV"><a class="viewcode-back" href="../image_fn.html#image_fn.filter_centrioles_BCV">[docs]</a><span class="k">def</span> <span class="nf">filter_centrioles_BCV</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">max_slice_im</span><span class="p">,</span> <span class="n">patch_size</span><span class="p">,</span> <span class="n">CV_thresh</span><span class="o">=</span><span class="mf">0.3</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Given (y,x) centroid coordinates, the maximum slice whole frame image filter detections based on signal-to-noise (SNR) ratio within local image crops. </span>
+
+<span class="sd">    The SNR measure used is the coefficient of variation, :math:`\sigma/\mu` where :math:`\sigma` and :math:`\mu` are the standard deviation and mean of the pixel intensities in the image patch.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centroids : numpy array</span>
+<span class="sd">        array of (y,x) 2D coordinates.</span>
+<span class="sd">    max_slice_im : numpy array</span>
+<span class="sd">        a grayscale 2D image</span>
+<span class="sd">    patch_size : int (odd)</span>
+<span class="sd">        width of the local area to crop around the given (y,x) centroid</span>
+<span class="sd">    CV_thresh : float</span>
+<span class="sd">        Signal-to-noise ratio cut-off where SNR is measured by CV i.e. centroids are kept if :math:`CV&gt;` CV_thresh</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filtered_centroids : numpy array</span>
+<span class="sd">        array of only valid (y,x) 2D coordinates that have :math:`CV&gt;` CV_thresh.</span>
+<span class="sd">    select : bool array</span>
+<span class="sd">        a binary array either 0 or 1 indicating which centroids have :math:`CV&gt;` CV_thresh.</span>
+<span class="sd">    filtered_CV : array</span>
+<span class="sd">        array with the corresponding CV of filtered_centroids.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># signal (biological coefficient of variation filter)</span>
+    <span class="n">patches</span> <span class="o">=</span> <span class="n">crop_patches_from_img</span><span class="p">(</span><span class="n">centrioles</span><span class="p">,</span> <span class="n">max_slice_im</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">patch_size</span><span class="p">)</span>
+    <span class="n">snr_patches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patches</span><span class="p">])</span>
+    
+    <span class="c1"># filter out the bogus detections? </span>
+    <span class="n">select</span> <span class="o">=</span> <span class="n">snr_patches</span> <span class="o">&gt;=</span> <span class="n">CV_thresh</span>
+    <span class="n">filtered_centroids</span> <span class="o">=</span> <span class="n">centrioles</span><span class="p">[</span><span class="n">select</span><span class="p">]</span>
+    <span class="n">filtered_CV</span> <span class="o">=</span> <span class="n">snr_patches</span><span class="p">[</span><span class="n">select</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">filtered_centroids</span><span class="p">,</span> <span class="n">select</span><span class="p">,</span> <span class="n">filtered_CV</span></div>
+
+
+<div class="viewcode-block" id="remove_duplicate_centrioles"><a class="viewcode-back" href="../image_fn.html#image_fn.remove_duplicate_centrioles">[docs]</a><span class="k">def</span> <span class="nf">remove_duplicate_centrioles</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">min_dist</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Removes duplicate (y,x) returning only one (y,x) instance given array of (y,x) centroid coordinates and a minimum distance threshold below which we call two (y,x) duplicates, </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centroids : numpy array</span>
+<span class="sd">        array of (y,x) 2D coordinates.</span>
+<span class="sd">    min_dist : float</span>
+<span class="sd">        two (y,x) coordinates are a duplicate if the distance between them is less than mid_dist.</span>
+<span class="sd">    lam : float</span>
+<span class="sd">        a very large float, typically just a number larger than the image diagonal to exclude oneself in the pairwise pairing process of (y,x) coordinates.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filtered_centroids : numpy array</span>
+<span class="sd">        array of unique (y,x) 2D coordinates.</span>
+<span class="sd">    select : bool array</span>
+<span class="sd">        a binary array either 0 or 1 indicating which centroids are taken as unique (y,x) instances.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="k">import</span> <span class="n">pairwise_distances</span>
+    
+    <span class="n">dist_matrix</span> <span class="o">=</span> <span class="n">pairwise_distances</span><span class="p">(</span><span class="n">centroids</span><span class="p">)</span>
+    <span class="n">dist_matrix</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">lam</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">centroids</span><span class="p">)))</span> <span class="c1"># prevent self interaction.</span>
+    <span class="c1"># initialisation.</span>
+    <span class="n">select_filter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">centroids</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_matrix</span><span class="p">)):</span>
+        
+        <span class="k">if</span> <span class="n">select_filter</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">dist_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">min_dist_arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">dist</span><span class="p">[</span><span class="n">min_dist_arg</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_dist</span><span class="p">:</span>
+                <span class="n">select_filter</span><span class="p">[</span><span class="n">min_dist_arg</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># set to false.</span>
+
+    <span class="n">select_filter</span> <span class="o">=</span> <span class="n">select_filter</span><span class="o">&gt;</span><span class="mi">0</span> <span class="c1"># make binary</span>
+    <span class="n">filtered_centroids</span> <span class="o">=</span> <span class="n">centroids</span><span class="p">[</span><span class="n">select_filter</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">filtered_centroids</span><span class="p">,</span> <span class="n">select_filter</span></div>
+
+<div class="viewcode-block" id="detect_centrioles_in_img"><a class="viewcode-back" href="../image_fn.html#image_fn.detect_centrioles_in_img">[docs]</a><span class="k">def</span> <span class="nf">detect_centrioles_in_img</span><span class="p">(</span> <span class="n">zstack_img</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">aniso_params</span><span class="p">,</span> <span class="n">patch_size</span><span class="p">,</span> <span class="n">CV_thresh</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">tslice</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">is_img_slice</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">filter_border</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_high_intensity_bg</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">remove_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_CV</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">separation</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">minmass</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">minoverlap</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bg_min_I</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">bg_max_area</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">bg_dilation</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">bg_invalid_check</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Primary function that wraps various functions in this module into one API call to detect centrioles given an image or image stack.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    zstack_img : numpy array</span>
+<span class="sd">        either </span>
+<span class="sd">            i) a temporal z-stack (n_frames x n_z x n_rows x n_cols), </span>
+<span class="sd">            ii) a z-stack (n_z x n_rows x n_cols) or </span>
+<span class="sd">            iii) a grayscale image (n_rows x n_cols)</span>
+<span class="sd">    size : float</span>
+<span class="sd">        Approximate expected width of centriole to detect in image pixels.</span>
+<span class="sd">    aniso_params : Python dict</span>
+<span class="sd">        A Python dictionary giving the parameters for running the anisotropic filtering of Perona-Malik [1]_. This dictionary should contain the following keys: &#39;iterations&#39;, &#39;delta&#39;, kappa&#39;, see :meth:`image_fn.perona_malik`</span>
+<span class="sd">    patch_size : int</span>
+<span class="sd">        size of the local image patch to crop for filtering by CV if used, see :meth:`image_fn.filter_centrioles_BCV`</span>
+<span class="sd">    CV_thresh : float</span>
+<span class="sd">        coefficient of variation threshold for keeping high SNR detections as in :meth:`image_fn.filter_centrioles_BCV`</span>
+<span class="sd">    tslice : int</span>
+<span class="sd">        if tslice :math:`&gt;=` 0, takes the corresponding time slice of the temporal z image and returns the max projection image over z. If zstack_img is just a zstack set tslice=-1.</span>
+<span class="sd">    is_img_slice : bool</span>
+<span class="sd">        Set True if input is a grayscale image.</span>
+<span class="sd">    filter_border : bool</span>
+<span class="sd">        If True, removes detections within a defined border zone</span>
+<span class="sd">    filter_high_intensity_bg : bool</span>
+<span class="sd">        If True, removes detections from high intensity background areas.</span>
+<span class="sd">    remove_duplicates : bool</span>
+<span class="sd">        If True, detects potential duplication of (y,x) locations that may by detecting the same centriole.</span>
+<span class="sd">    filter_CV : bool </span>
+<span class="sd">        If True, keeps only (y,x) centriole detections whose CV evaluated over a local image crop is greater than a given threshold.</span>
+<span class="sd">    separation : float</span>
+<span class="sd">        minimum separation distance in pixels between blobs. </span>
+<span class="sd">    invert : bool</span>
+<span class="sd">        if True, features of interest to detect are assumed darker than background, used in trackpy.locate, see [2]_</span>
+<span class="sd">    minmass : float</span>
+<span class="sd">        minimum integrated intensity values of detected blob used in trackpy.locate, see [2]_</span>
+<span class="sd">    minoverlap : float</span>
+<span class="sd">        distance threshold for calling duplicate (y,x) coordinates, see :meth:`image_fn.remove_duplicate_centrioles`</span>
+<span class="sd">    bg_min_I : float </span>
+<span class="sd">        intensity cut-off for defining &#39;high&#39; intensity image areas as in :meth:`image_fn.produce_valid_img_mask`</span>
+<span class="sd">    bg_max_area : int</span>
+<span class="sd">        area cut-off for defining &#39;large&#39; background areas as in :meth:`image_fn.produce_valid_img_mask`</span>
+<span class="sd">    bg_dilation : int </span>
+<span class="sd">        disk kernel size to dilate background noise mask as in :meth:`image_fn.produce_valid_img_mask`</span>
+<span class="sd">    bg_invalid_check : float</span>
+<span class="sd">        this is a check to prevent everything in the image being regarded as being invalid if one knows centrioles should be present. It is an upper bound on the total area of the invalid image area mask output of :meth:`image_fn.produce_valid_img_mask`.</span>
+<span class="sd">    debug: bool</span>
+<span class="sd">        if True, will produce all intermediate plotting graphics to help debugging.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out_dict : Python dict</span>
+<span class="sd">        dictionary which collects the final output detections along with additional detection information.</span>
+<span class="sd">        </span>
+<span class="sd">        The dictionary has the following structure</span>
+<span class="sd">            &#39;centriole_centroids&#39;: </span>
+<span class="sd">                (y,x) coordinates of detected centrioles</span>
+<span class="sd">            &#39;centriole_pos&#39;: </span>
+<span class="sd">                table of all centriole detections with associated intensity statistics</span>
+<span class="sd">            &#39;max_proj_full_img&#39;: </span>
+<span class="sd">                maximum projection image</span>
+<span class="sd">            &#39;max_proj_full_img_denoise&#39;: </span>
+<span class="sd">                anisotropically filtered maximum projection image</span>
+<span class="sd">            &#39;background_mask&#39;: </span>
+<span class="sd">                background image area mask</span>
+<span class="sd">            &#39;valid_detection_mask&#39;: </span>
+<span class="sd">                non-background image areas where centrioles are being detected.</span>
+<span class="sd">            &#39;centriole_SNR&#39;: </span>
+<span class="sd">                associated :math:`CV` of detected centrioles</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Perona, P et. al, &quot;Anisotropic diffusion.&quot; Geometry-driven diffusion in computer vision. Springer, Dordrecht, 1994. 73-92.</span>
+<span class="sd">    .. [2] TrackPy Gaussian blob detection, http://soft-matter.github.io/trackpy/dev/generated/trackpy.locate.html.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">trackpy</span> <span class="k">as</span> <span class="nn">tp</span> 
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">threshold_otsu</span>
+    <span class="kn">from</span> <span class="nn">skimage.exposure</span> <span class="k">import</span> <span class="n">rescale_intensity</span>
+    <span class="kn">import</span> <span class="nn">visualization</span> <span class="k">as</span> <span class="nn">viz</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span> 
+
+    <span class="c1">##########################################</span>
+    <span class="c1"># </span>
+    <span class="c1">#   Handle different file inputs.</span>
+    <span class="c1">#</span>
+    <span class="c1">##########################################</span>
+    <span class="k">if</span> <span class="n">is_img_slice</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tslice</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">zstack_time_img</span> <span class="o">=</span> <span class="n">zstack_img</span><span class="p">[</span><span class="n">tslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">zstack_time_img</span> <span class="o">=</span> <span class="n">zstack_img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># max projection to detect positions. </span>
+        <span class="n">slice_img</span> <span class="o">=</span> <span class="n">zstack_time_img</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">slice_img</span> <span class="o">=</span> <span class="n">zstack_img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># nothing to do.</span>
+
+
+    <span class="c1">##########################################</span>
+    <span class="c1">#   Anisotropic filtering to enhance signal to background.</span>
+    <span class="c1">##########################################</span>
+    <span class="n">slice_img_denoise</span> <span class="o">=</span> <span class="n">rescale_intensity</span><span class="p">(</span><span class="n">perona_malik</span><span class="p">(</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">slice_img</span><span class="o">/</span><span class="mf">255.</span><span class="p">),</span> <span class="n">iterations</span><span class="o">=</span><span class="n">aniso_params</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">],</span> <span class="n">kappa</span><span class="o">=</span><span class="n">aniso_params</span><span class="p">[</span><span class="s1">&#39;kappa&#39;</span><span class="p">],</span> <span class="n">delta</span><span class="o">=</span><span class="n">aniso_params</span><span class="p">[</span><span class="s1">&#39;delta&#39;</span><span class="p">]))</span> <span class="c1"># denoising, these parameters work well thus far for anisotropic diffusion. </span>
+                
+    <span class="c1">##########################################</span>
+    <span class="c1">#   Gaussian blob detection (through TrackPy)</span>
+    <span class="c1">##########################################</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">locate</span><span class="p">(</span><span class="n">slice_img_denoise</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">separation</span><span class="o">=</span><span class="n">separation</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="n">invert</span><span class="p">,</span> <span class="n">minmass</span><span class="o">=</span><span class="n">minmass</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Viz 1 : initial detection</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Initial Gaussian Blob Detection&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">slice_img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+        <span class="n">viz</span><span class="o">.</span><span class="n">draw_circles</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="n">patch_size</span><span class="o">*</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+    <span class="c1">##########################################</span>
+    <span class="c1">#   Precompute some binary masks for later (optional) use</span>
+    <span class="c1">##########################################</span>
+    <span class="n">valid_img_mask</span> <span class="o">=</span> <span class="n">produce_valid_img_mask</span><span class="p">(</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">slice_img</span><span class="o">/</span><span class="mf">255.</span><span class="p">),</span> <span class="n">min_I</span><span class="o">=</span><span class="n">bg_min_I</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="n">bg_max_area</span><span class="p">,</span> <span class="n">dilation</span><span class="o">=</span><span class="n">bg_dilation</span><span class="p">)</span>
+    <span class="n">background_img</span> <span class="o">=</span> <span class="n">slice_img</span> <span class="o">&lt;</span> <span class="n">threshold_otsu</span><span class="p">(</span><span class="n">slice_img</span><span class="p">)</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optionally filter out border centriole detections</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filter_border</span><span class="p">:</span>
+        <span class="n">centriole_centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># filter the centroids ( don&#39;t care for those at the side. )</span>
+        <span class="n">centriole_centroids</span><span class="p">,</span> <span class="n">centriole_centroids_filter</span> <span class="o">=</span> <span class="n">filter_border_centroids_detection</span><span class="p">(</span><span class="n">centriole_centroids</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">limits</span> <span class="o">=</span> <span class="n">slice_img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">centriole_centroids_filter</span><span class="p">]</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">centriole_centroids</span><span class="p">))</span> <span class="c1"># re-index.</span>
+
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Viz 2 : Filter border detections. Border is highlighted with a yellow transparency mask.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">border_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">slice_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">slice_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span>
+            <span class="n">border_mask</span><span class="p">[</span><span class="o">-</span><span class="n">size</span><span class="p">:,:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">border_mask</span><span class="p">[</span><span class="o">-</span><span class="n">size</span><span class="p">:,:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">border_mask</span><span class="p">[:</span><span class="n">size</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">border_mask</span><span class="p">[:</span><span class="n">size</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">border_mask</span><span class="p">[:,:</span><span class="n">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">border_mask</span><span class="p">[:,:</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">border_mask</span><span class="p">[:,</span><span class="o">-</span><span class="n">size</span><span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">border_mask</span><span class="p">[:,</span><span class="o">-</span><span class="n">size</span><span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Filtering border detections&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">slice_img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">border_mask</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+            <span class="n">viz</span><span class="o">.</span><span class="n">draw_circles</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="n">patch_size</span><span class="o">*</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optionally filter out centriole detections in spurious large intensity band zones.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filter_high_intensity_bg</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">valid_img_mask</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">valid_img_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">bg_invalid_check</span><span class="p">:</span> <span class="c1"># check that not all the image is being highlighted as invalid.</span>
+            <span class="n">centriole_centroids</span><span class="p">,</span> <span class="n">centriole_centroids_filter</span> <span class="o">=</span> <span class="n">filter_noise_centroids_detection</span><span class="p">(</span><span class="n">centriole_centroids</span><span class="p">,</span> <span class="n">valid_img_mask</span><span class="p">)</span>
+
+            <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">centriole_centroids_filter</span><span class="p">]</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">centriole_centroids</span><span class="p">))</span> <span class="c1"># re-index.</span>
+            
+            <span class="n">valid_img_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">valid_img_mask</span><span class="p">)</span> <span class="o">&gt;</span><span class="mi">0</span> <span class="c1"># invert since the valid_img_mask is really a background.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">valid_img_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">valid_img_mask</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Viz 3 : Filter background detections in spurious high intensity zones.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># compose a colour mask to highlight the invalid image regions</span>
+            <span class="n">color_slice_valid_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">valid_img_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">valid_img_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">]);</span> <span class="n">color_slice_valid_mask</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">valid_img_mask</span><span class="p">);</span> <span class="n">color_slice_valid_mask</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">valid_img_mask</span><span class="p">)</span>
+    
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Filtering high intensity regions&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">slice_img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">color_slice_valid_mask</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+            <span class="n">viz</span><span class="o">.</span><span class="n">draw_circles</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="n">patch_size</span><span class="o">*</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">valid_img_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">valid_img_mask</span><span class="p">)</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove duplicates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">remove_duplicates</span><span class="p">:</span>
+        <span class="n">centriole_centroids</span><span class="p">,</span> <span class="n">centriole_centroids_filter</span> <span class="o">=</span> <span class="n">remove_duplicate_centrioles</span><span class="p">(</span><span class="n">centriole_centroids</span><span class="p">,</span> <span class="n">min_dist</span><span class="o">=</span><span class="n">minoverlap</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">centriole_centroids_filter</span><span class="p">]</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">centriole_centroids</span><span class="p">))</span> <span class="c1"># re-index.</span>
+
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Viz 4 : Remove duplicate detections</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Removing duplicates by spatial proximity&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">slice_img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+            <span class="n">viz</span><span class="o">.</span><span class="n">draw_circles</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="n">patch_size</span><span class="o">*</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove low SNR.  </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filter_CV</span><span class="p">:</span>
+        <span class="c1"># signal (biological coefficient of variation filter) [helps reduce false positives.]</span>
+        <span class="n">centriole_centroids</span><span class="p">,</span> <span class="n">centriole_centroids_filter</span><span class="p">,</span> <span class="n">centriole_SNR</span> <span class="o">=</span> <span class="n">filter_centrioles_BCV</span><span class="p">(</span><span class="n">centriole_centroids</span><span class="p">,</span> <span class="n">slice_img</span><span class="p">,</span> <span class="n">patch_size</span><span class="p">,</span> <span class="n">CV_thresh</span><span class="o">=</span><span class="n">CV_thresh</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">centriole_centroids_filter</span><span class="p">]</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">centriole_centroids</span><span class="p">))</span> <span class="c1"># re-index.</span>
+
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Viz 5 : Remove by CV</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># final detection with white boxes </span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Filtering by CV&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">slice_img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+            <span class="n">viz</span><span class="o">.</span><span class="n">draw_squares</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">patch_size</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">centriole_SNR</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># not computed.</span>
+
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Viz 6 : Final detections</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># final detection with white boxes </span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Final Detections&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">slice_img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+            <span class="n">viz</span><span class="o">.</span><span class="n">draw_squares</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">patch_size</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+ 
+    <span class="n">out_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;centriole_centroids&#39;</span><span class="p">:</span><span class="n">centriole_centroids</span><span class="p">,</span> 
+                <span class="s1">&#39;centriole_pos&#39;</span><span class="p">:</span><span class="n">f</span><span class="p">,</span> 
+                <span class="s1">&#39;max_proj_full_img&#39;</span><span class="p">:</span><span class="n">slice_img</span><span class="p">,</span>
+                <span class="s1">&#39;max_proj_full_img_denoise&#39;</span><span class="p">:</span><span class="n">slice_img_denoise</span><span class="p">,</span>
+                <span class="s1">&#39;background_mask&#39;</span><span class="p">:</span><span class="n">background_img</span><span class="p">,</span>
+                <span class="s1">&#39;valid_detection_mask&#39;</span><span class="p">:</span><span class="n">valid_img_mask</span><span class="p">,</span>
+                <span class="s1">&#39;centriole_SNR&#39;</span><span class="p">:</span><span class="n">centriole_SNR</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">out_dict</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Felix Y. Zhou
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.1',
+              LANGUAGE:'en',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: ''
+          };
+      </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,737 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>image_fn module &mdash; Centriole Distancing 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="next" title="training_fn module" href="training_fn.html" />
+    <link rel="prev" title="file_io module" href="file_io.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Centriole Distancing
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="file_io.html">file_io module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">image_fn module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_fn.html">training_fn module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">visualization module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Centriole Distancing</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>image_fn module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/image_fn.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-image_fn">
+<span id="image-fn-module"></span><h1>image_fn module<a class="headerlink" href="#module-image_fn" title="Permalink to this headline">¶</a></h1>
+<p>This module contains scripts for image manipulation including denoising, enhancement and cropping functions</p>
+<dl class="function">
+<dt id="image_fn.crop_patches_from_img">
+<code class="descclassname">image_fn.</code><code class="descname">crop_patches_from_img</code><span class="sig-paren">(</span><em>zstack</em>, <em>centroids</em>, <em>width=25</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#crop_patches_from_img"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.crop_patches_from_img" title="Permalink to this definition">¶</a></dt>
+<dd><p>Crop image patches from a given input image of given width at given (x,y) centroid coordinates.</p>
+<p>Float centroids are first cast into ints.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>zstack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">input (n_rows x n_cols x n_channels) numpy array.</p>
+</dd>
+<dt><strong>centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array or list</span><dd><p class="first last">array of (y,x) centroid coordinates</p>
+</dd>
+<dt><strong>width</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int (odd)</span><dd><p class="first last">size of cropped image patch is (width x width x n_channels)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>zs</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">an array of cropped patches with length equal to the number of centroids.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.denoise_zstack">
+<code class="descclassname">image_fn.</code><code class="descname">denoise_zstack</code><span class="sig-paren">(</span><em>zstack</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#denoise_zstack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.denoise_zstack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="image_fn.detect_centrioles_in_img">
+<code class="descclassname">image_fn.</code><code class="descname">detect_centrioles_in_img</code><span class="sig-paren">(</span><em>zstack_img</em>, <em>size</em>, <em>aniso_params</em>, <em>patch_size</em>, <em>CV_thresh=0.3</em>, <em>tslice=0</em>, <em>is_img_slice=False</em>, <em>filter_border=True</em>, <em>filter_high_intensity_bg=True</em>, <em>remove_duplicates=True</em>, <em>filter_CV=True</em>, <em>separation=5</em>, <em>invert=False</em>, <em>minmass=10</em>, <em>minoverlap=10</em>, <em>bg_min_I=0.2</em>, <em>bg_max_area=1000</em>, <em>bg_dilation=3</em>, <em>bg_invalid_check=0.5</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#detect_centrioles_in_img"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.detect_centrioles_in_img" title="Permalink to this definition">¶</a></dt>
+<dd><p>Primary function that wraps various functions in this module into one API call to detect centrioles given an image or image stack.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>zstack_img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>either </dt>
+<dd><ol class="first last lowerroman simple">
+<li>a temporal z-stack (n_frames x n_z x n_rows x n_cols),</li>
+<li>a z-stack (n_z x n_rows x n_cols) or</li>
+<li>a grayscale image (n_rows x n_cols)</li>
+</ol>
+</dd>
+</dl>
+</dd>
+<dt><strong>size</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">Approximate expected width of centriole to detect in image pixels.</p>
+</dd>
+<dt><strong>aniso_params</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Python dict</span><dd><p class="first last">A Python dictionary giving the parameters for running the anisotropic filtering of Perona-Malik <a class="reference internal" href="#rb24bcfacd8ca-1" id="id1">[1]</a>. This dictionary should contain the following keys: &#8216;iterations&#8217;, &#8216;delta&#8217;, kappa&#8217;, see <a class="reference internal" href="#image_fn.perona_malik" title="image_fn.perona_malik"><code class="xref py py-meth docutils literal"><span class="pre">image_fn.perona_malik()</span></code></a></p>
+</dd>
+<dt><strong>patch_size</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">size of the local image patch to crop for filtering by CV if used, see <a class="reference internal" href="#image_fn.filter_centrioles_BCV" title="image_fn.filter_centrioles_BCV"><code class="xref py py-meth docutils literal"><span class="pre">image_fn.filter_centrioles_BCV()</span></code></a></p>
+</dd>
+<dt><strong>CV_thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">coefficient of variation threshold for keeping high SNR detections as in <a class="reference internal" href="#image_fn.filter_centrioles_BCV" title="image_fn.filter_centrioles_BCV"><code class="xref py py-meth docutils literal"><span class="pre">image_fn.filter_centrioles_BCV()</span></code></a></p>
+</dd>
+<dt><strong>tslice</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">if tslice <img class="math" src="_images/math/04857b491a519aa41a690a6f99cf06f3e8849d46.png" alt="&gt;="/> 0, takes the corresponding time slice of the temporal z image and returns the max projection image over z. If zstack_img is just a zstack set tslice=-1.</p>
+</dd>
+<dt><strong>is_img_slice</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">Set True if input is a grayscale image.</p>
+</dd>
+<dt><strong>filter_border</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">If True, removes detections within a defined border zone</p>
+</dd>
+<dt><strong>filter_high_intensity_bg</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">If True, removes detections from high intensity background areas.</p>
+</dd>
+<dt><strong>remove_duplicates</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">If True, detects potential duplication of (y,x) locations that may by detecting the same centriole.</p>
+</dd>
+<dt><strong>filter_CV</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">If True, keeps only (y,x) centriole detections whose CV evaluated over a local image crop is greater than a given threshold.</p>
+</dd>
+<dt><strong>separation</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">minimum separation distance in pixels between blobs.</p>
+</dd>
+<dt><strong>invert</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">if True, features of interest to detect are assumed darker than background, used in trackpy.locate, see <a class="reference internal" href="#rb24bcfacd8ca-2" id="id2">[2]</a></p>
+</dd>
+<dt><strong>minmass</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">minimum integrated intensity values of detected blob used in trackpy.locate, see <a class="reference internal" href="#rb24bcfacd8ca-2" id="id3">[2]</a></p>
+</dd>
+<dt><strong>minoverlap</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">distance threshold for calling duplicate (y,x) coordinates, see <a class="reference internal" href="#image_fn.remove_duplicate_centrioles" title="image_fn.remove_duplicate_centrioles"><code class="xref py py-meth docutils literal"><span class="pre">image_fn.remove_duplicate_centrioles()</span></code></a></p>
+</dd>
+<dt><strong>bg_min_I</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">intensity cut-off for defining &#8216;high&#8217; intensity image areas as in <a class="reference internal" href="#image_fn.produce_valid_img_mask" title="image_fn.produce_valid_img_mask"><code class="xref py py-meth docutils literal"><span class="pre">image_fn.produce_valid_img_mask()</span></code></a></p>
+</dd>
+<dt><strong>bg_max_area</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">area cut-off for defining &#8216;large&#8217; background areas as in <a class="reference internal" href="#image_fn.produce_valid_img_mask" title="image_fn.produce_valid_img_mask"><code class="xref py py-meth docutils literal"><span class="pre">image_fn.produce_valid_img_mask()</span></code></a></p>
+</dd>
+<dt><strong>bg_dilation</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">disk kernel size to dilate background noise mask as in <a class="reference internal" href="#image_fn.produce_valid_img_mask" title="image_fn.produce_valid_img_mask"><code class="xref py py-meth docutils literal"><span class="pre">image_fn.produce_valid_img_mask()</span></code></a></p>
+</dd>
+<dt><strong>bg_invalid_check</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">this is a check to prevent everything in the image being regarded as being invalid if one knows centrioles should be present. It is an upper bound on the total area of the invalid image area mask output of <a class="reference internal" href="#image_fn.produce_valid_img_mask" title="image_fn.produce_valid_img_mask"><code class="xref py py-meth docutils literal"><span class="pre">image_fn.produce_valid_img_mask()</span></code></a>.</p>
+</dd>
+<dt><strong>debug: bool</strong></dt>
+<dd><p class="first last">if True, will produce all intermediate plotting graphics to help debugging.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>out_dict</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Python dict</span><dd><p class="first">dictionary which collects the final output detections along with additional detection information.</p>
+<dl class="last docutils">
+<dt>The dictionary has the following structure</dt>
+<dd><dl class="first last docutils">
+<dt>&#8216;centriole_centroids&#8217;: </dt>
+<dd><p class="first last">(y,x) coordinates of detected centrioles</p>
+</dd>
+<dt>&#8216;centriole_pos&#8217;: </dt>
+<dd><p class="first last">table of all centriole detections with associated intensity statistics</p>
+</dd>
+<dt>&#8216;max_proj_full_img&#8217;: </dt>
+<dd><p class="first last">maximum projection image</p>
+</dd>
+<dt>&#8216;max_proj_full_img_denoise&#8217;: </dt>
+<dd><p class="first last">anisotropically filtered maximum projection image</p>
+</dd>
+<dt>&#8216;background_mask&#8217;: </dt>
+<dd><p class="first last">background image area mask</p>
+</dd>
+<dt>&#8216;valid_detection_mask&#8217;: </dt>
+<dd><p class="first last">non-background image areas where centrioles are being detected.</p>
+</dd>
+<dt>&#8216;centriole_SNR&#8217;: </dt>
+<dd><p class="first last">associated <img class="math" src="_images/math/bd804c0794bc65a9c1a33e99d7c848f444e5aab9.png" alt="CV"/> of detected centrioles</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="rb24bcfacd8ca-1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Perona, P et. al, &#8220;Anisotropic diffusion.&#8221; Geometry-driven diffusion in computer vision. Springer, Dordrecht, 1994. 73-92.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="rb24bcfacd8ca-2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>, <a class="fn-backref" href="#id5">3</a>)</em> TrackPy Gaussian blob detection, <a class="reference external" href="http://soft-matter.github.io/trackpy/dev/generated/trackpy.locate.html">http://soft-matter.github.io/trackpy/dev/generated/trackpy.locate.html</a>.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.filter_border_centroids_detection">
+<code class="descclassname">image_fn.</code><code class="descname">filter_border_centroids_detection</code><span class="sig-paren">(</span><em>centroids</em>, <em>size</em>, <em>limits</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#filter_border_centroids_detection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.filter_border_centroids_detection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given (y,x) coordinates and the size of the border, removes all coordinates that lie within the defined border.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of (y,x) 2D coordinates.</p>
+</dd>
+<dt><strong>size</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">border size, how many pixels from the image edge do you consider the border. Isotropic border is assumed.</p>
+</dd>
+<dt><strong>limits</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">tuple-like</span><dd><p class="first last">(y_max, x_max) pair that define the maximum number of rows, columns respectively of the image.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filtered_centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of only valid (y,x) 2D coordinates that do not lie in the border zone.</p>
+</dd>
+<dt><strong>select</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool array</span><dd><p class="first last">a binary array either 0 or 1 indicating which centroids lie within the border zone.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.filter_centrioles_BCV">
+<code class="descclassname">image_fn.</code><code class="descname">filter_centrioles_BCV</code><span class="sig-paren">(</span><em>centroids</em>, <em>max_slice_im</em>, <em>patch_size</em>, <em>CV_thresh=0.3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#filter_centrioles_BCV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.filter_centrioles_BCV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given (y,x) centroid coordinates, the maximum slice whole frame image filter detections based on signal-to-noise (SNR) ratio within local image crops.</p>
+<p>The SNR measure used is the coefficient of variation, <img class="math" src="_images/math/4bbcaa0b6dbd78817a6dd7c08428baa149aeb5e0.png" alt="\sigma/\mu"/> where <img class="math" src="_images/math/011e5790a6c33043ceadca81d9657dde6c61d769.png" alt="\sigma"/> and <img class="math" src="_images/math/d79e8a2c7ce54906c2b25549da38bdbe02cf40d6.png" alt="\mu"/> are the standard deviation and mean of the pixel intensities in the image patch.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of (y,x) 2D coordinates.</p>
+</dd>
+<dt><strong>max_slice_im</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">a grayscale 2D image</p>
+</dd>
+<dt><strong>patch_size</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int (odd)</span><dd><p class="first last">width of the local area to crop around the given (y,x) centroid</p>
+</dd>
+<dt><strong>CV_thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">Signal-to-noise ratio cut-off where SNR is measured by CV i.e. centroids are kept if <img class="math" src="_images/math/8d97e43762e3d11fe757e14bdbfd1b2c34d38c07.png" alt="CV&gt;"/> CV_thresh</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filtered_centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of only valid (y,x) 2D coordinates that have <img class="math" src="_images/math/8d97e43762e3d11fe757e14bdbfd1b2c34d38c07.png" alt="CV&gt;"/> CV_thresh.</p>
+</dd>
+<dt><strong>select</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool array</span><dd><p class="first last">a binary array either 0 or 1 indicating which centroids have <img class="math" src="_images/math/8d97e43762e3d11fe757e14bdbfd1b2c34d38c07.png" alt="CV&gt;"/> CV_thresh.</p>
+</dd>
+<dt><strong>filtered_CV</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">array</span><dd><p class="first last">array with the corresponding CV of filtered_centroids.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.filter_masks">
+<code class="descclassname">image_fn.</code><code class="descname">filter_masks</code><span class="sig-paren">(</span><em>mask</em>, <em>min_area=10</em>, <em>max_area=300</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#filter_masks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.filter_masks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="image_fn.filter_masks_centre">
+<code class="descclassname">image_fn.</code><code class="descname">filter_masks_centre</code><span class="sig-paren">(</span><em>mask</em>, <em>min_area=10</em>, <em>max_area=300</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#filter_masks_centre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.filter_masks_centre" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="image_fn.filter_noise_centroids_detection">
+<code class="descclassname">image_fn.</code><code class="descname">filter_noise_centroids_detection</code><span class="sig-paren">(</span><em>centroids</em>, <em>mask</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#filter_noise_centroids_detection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.filter_noise_centroids_detection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given (y,x) coordinates and a binary mask of 0,1 of background regions, removes coordinates that lie in 1 areas (background).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of (y,x) 2D coordinates.</p>
+</dd>
+<dt><strong>mask</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">boolean or integer mask with values 1 or 0 denoting invalid and valid spatial regions respectively.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filtered_centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of only valid (y,x) 2D coordinates that lie in mask==0 regions.</p>
+</dd>
+<dt><strong>select</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool array</span><dd><p class="first last">a binary array either 0 or 1 indicating which centroids are valid.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.find_best_focus">
+<code class="descclassname">image_fn.</code><code class="descname">find_best_focus</code><span class="sig-paren">(</span><em>zstack</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#find_best_focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.find_best_focus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the best focus slice by finding the z-slice that maximises the signal-to-noise ratio given by coefficient of variation (CV).</p>
+<div class="math">
+<p><img src="_images/math/7d4cafd030af3cb3fe0aafa87f02555bdb479f70.png" alt="CV = \sigma/\mu"/></p>
+</div><p>where <img class="math" src="_images/math/011e5790a6c33043ceadca81d9657dde6c61d769.png" alt="\sigma"/> and <img class="math" src="_images/math/d79e8a2c7ce54906c2b25549da38bdbe02cf40d6.png" alt="\mu"/> are the standard deviation and mean of the slice pixel intensities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>zstack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">an input (n_z x n_rows x n_cols) image.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>best_focus_slice</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">index of the z-slice of best focus.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.find_best_focus_stacks">
+<code class="descclassname">image_fn.</code><code class="descname">find_best_focus_stacks</code><span class="sig-paren">(</span><em>zstacks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#find_best_focus_stacks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.find_best_focus_stacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the best focus slice of a series of z-slice stacks and constructs an array composed of the best-focus slices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>zstacks</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">an input (n_stacks x n_z x n_rows x n_cols) image.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>best_focus_imgs</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">a new numpy array (n_stacks x n_rows x n_cols) composed of the best-focus slices only.</p>
+</dd>
+<dt><strong>best_focus_slices</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">list of the index of the z-slice of best focus for each z-slice stack.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.locate_centroids_simple">
+<code class="descclassname">image_fn.</code><code class="descname">locate_centroids_simple</code><span class="sig-paren">(</span><em>mask</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#locate_centroids_simple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.locate_centroids_simple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an image, locates all centroids of connected components.</p>
+<p>Note: This function inherently assumes a threshold of 0 and dilation with disk kernel of 3.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>mask</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">an input grayscale image.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">an array of (y,x) coordinate pairs giving the peaks in the input image.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.perona_malik">
+<code class="descclassname">image_fn.</code><code class="descname">perona_malik</code><span class="sig-paren">(</span><em>img</em>, <em>iterations=10</em>, <em>delta=0.14</em>, <em>kappa=15</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#perona_malik"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.perona_malik" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs Perona-Malik anisotropic on a given grayscale image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">(n_rows x n_cols) grayscale image.</p>
+</dd>
+<dt><strong>iterations</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">Number of iterations to run the diffusion process. Higher gives smoother output.</p>
+</dd>
+<dt><strong>delta</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">This is the time step <img class="math" src="_images/math/ec002955bdf95ee9869878fbad4f80fc98539359.png" alt="\Delta t"/> in the diffusion equation.</p>
+</dd>
+<dt><strong>kappa</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">This regulates the sensitivity to edges in the Perona-Malik formulation.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filtered_img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">The filtered output image. Same size as input of type float.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r7a395c93b38a-1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[1]</a></td><td>Perona, P et. al, &#8220;Anisotropic diffusion.&#8221; Geometry-driven diffusion in computer vision. Springer, Dordrecht, 1994. 73-92.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.produce_valid_img_mask">
+<code class="descclassname">image_fn.</code><code class="descname">produce_valid_img_mask</code><span class="sig-paren">(</span><em>img</em>, <em>min_I=0.1</em>, <em>max_area=1000</em>, <em>dilation=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#produce_valid_img_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.produce_valid_img_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Example Centriole images may have a ring of high pixel intensity of a much larger structure. This function is designed to identify such large continuous areas in order to filter detections.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">an input grayscale image.</p>
+</dd>
+<dt><strong>min_I</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">the lower threshold for identifying the bright intensity regions. Assumes normalised intensities i.e. image intensities should be between [0,1]</p>
+</dd>
+<dt><strong>max_area</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">integer</span><dd><p class="first last">threshold for identifying &#8216;large&#8217; region based on counting the number of pixels within the area.</p>
+</dd>
+<dt><strong>dilation</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">size of the disk kernel used to postprocess and smoothen resulting binary segmentation.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>invalid_regions</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">a binary image of either 0, 1 pixel intensities indicating the large regions of high intensity i.e. invalid centriole zones.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.remove_duplicate_centrioles">
+<code class="descclassname">image_fn.</code><code class="descname">remove_duplicate_centrioles</code><span class="sig-paren">(</span><em>centroids</em>, <em>min_dist</em>, <em>lam=1000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#remove_duplicate_centrioles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.remove_duplicate_centrioles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes duplicate (y,x) returning only one (y,x) instance given array of (y,x) centroid coordinates and a minimum distance threshold below which we call two (y,x) duplicates,</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of (y,x) 2D coordinates.</p>
+</dd>
+<dt><strong>min_dist</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">two (y,x) coordinates are a duplicate if the distance between them is less than mid_dist.</p>
+</dd>
+<dt><strong>lam</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">a very large float, typically just a number larger than the image diagonal to exclude oneself in the pairwise pairing process of (y,x) coordinates.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filtered_centroids</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of unique (y,x) 2D coordinates.</p>
+</dd>
+<dt><strong>select</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool array</span><dd><p class="first last">a binary array either 0 or 1 indicating which centroids are taken as unique (y,x) instances.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.uint16_2_uint8">
+<code class="descclassname">image_fn.</code><code class="descname">uint16_2_uint8</code><span class="sig-paren">(</span><em>vidstack</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#uint16_2_uint8"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.uint16_2_uint8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Casts any input image to be of uint8 type.</p>
+<p>Note: Though named uint16, converts any input to uint8. We are just implicitly assuming with biological imaging uint16 input.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>vidstack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">an input image (any size) as a numpy array.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>uint8_img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">a numpy array of same size as input rescaled to be of uint8 (range [0,255]).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="training_fn.html" class="btn btn-neutral float-right" title="training_fn module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="file_io.html" class="btn btn-neutral" title="file_io module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Felix Y. Zhou
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.1',
+              LANGUAGE:'en',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: ''
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

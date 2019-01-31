@@ -1,0 +1,396 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>file_io &mdash; Centriole Distancing 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Centriole Distancing
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../file_io.html">file_io module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">image_fn module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_fn.html">training_fn module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">visualization module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Centriole Distancing</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>file_io</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for file_io</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python2</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains scripts for file input/output manipulation.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+<span class="kn">import</span> <span class="nn">image_fn</span>
+
+<div class="viewcode-block" id="read_multiimg_PIL"><a class="viewcode-back" href="../file_io.html#file_io.read_multiimg_PIL">[docs]</a><span class="k">def</span> <span class="nf">read_multiimg_PIL</span><span class="p">(</span><span class="n">tiffile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads multipage .tif file</span>
+
+<span class="sd">    note: z_slice data (bioformats) is flattened and coerced into the format for grayscale above i.e. &#39;n_frames&#39; = n_timepoints x n_slices</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tiffile : string</span>
+<span class="sd">        input .tif file location.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    imgs : numpy array</span>
+<span class="sd">        (n_frames x n_rows x n_cols) for grayscale, or</span>
+<span class="sd">        (n_frames x n_rows x n_cols x 3) for RGB</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">PIL</span> <span class="k">import</span> <span class="n">Image</span>
+    
+    <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tiffile</span><span class="p">)</span>
+
+    <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">read</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">frame</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">while</span> <span class="n">read</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">img</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span> <span class="c1"># select this as the image</span>
+            <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:,:])</span>
+            
+            <span class="n">frame</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">except</span> <span class="ne">EOFError</span><span class="p">:</span>
+            <span class="c1"># Not enough frames in img</span>
+            <span class="k">break</span>
+
+    <span class="n">imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">imgs</span></div>
+
+<div class="viewcode-block" id="read_stack_img"><a class="viewcode-back" href="../file_io.html#file_io.read_stack_img">[docs]</a><span class="k">def</span> <span class="nf">read_stack_img</span><span class="p">(</span><span class="n">tiffile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Utility function to read an (n_frames x n_rows x n_cols) grayscale/RGB image stack, converting input into uint8.</span>
+
+<span class="sd">    note: n_frames is assumed to be either #. of time slices or #. of z-slices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tiffile : string</span>
+<span class="sd">        input .tif file location.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    zstack_img : numpy array</span>
+<span class="sd">        (n_frames x n_rows x n_cols) for grayscale, or</span>
+<span class="sd">        (n_frames x n_rows x n_cols x 3) for RGB</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zstack_img</span> <span class="o">=</span> <span class="n">read_multiimg_PIL</span><span class="p">(</span><span class="n">tiffile</span><span class="p">)</span> 
+    <span class="n">zstack_img</span> <span class="o">=</span> <span class="n">image_fn</span><span class="o">.</span><span class="n">uint16_2_uint8</span><span class="p">(</span><span class="n">zstack_img</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">zstack_img</span></div>
+
+<div class="viewcode-block" id="read_stack_time_img"><a class="viewcode-back" href="../file_io.html#file_io.read_stack_time_img">[docs]</a><span class="k">def</span> <span class="nf">read_stack_time_img</span><span class="p">(</span><span class="n">tiffile</span><span class="p">,</span> <span class="n">n_timepoints</span><span class="p">,</span> <span class="n">n_slices</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;Utility function to read an (n_timepoints x n_slices x n_rows x n_cols) grayscale/RGB image stack, converting input into uint8.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tiffile : string</span>
+<span class="sd">        input .tif file location.</span>
+<span class="sd">    n_timepoints : int</span>
+<span class="sd">        number of expected timepoints in the image.</span>
+<span class="sd">    n_slices : int</span>
+<span class="sd">        number of expected z-slices.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    zstack_img : numpy array</span>
+<span class="sd">        (n_timepoints x n_slices x n_rows x n_cols) for grayscale, or</span>
+<span class="sd">        (n_timepoints x n_slices x n_rows x n_cols x 3) for RGB</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zstack_img</span> <span class="o">=</span> <span class="n">read_stack_img</span><span class="p">(</span><span class="n">tiffile</span><span class="p">)</span> 
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">zstack_img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">zstack_img</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">zstack_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">zstack_img</span><span class="p">,</span> <span class="p">(</span><span class="n">n_timepoints</span><span class="p">,</span> <span class="n">n_slices</span><span class="p">,</span> <span class="n">zstack_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">zstack_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>        
+    
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">zstack_img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">zstack_img</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">zstack_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">zstack_img</span><span class="p">,</span> <span class="p">(</span><span class="n">n_timepoints</span><span class="p">,</span> <span class="n">n_slices</span><span class="p">,</span> <span class="n">zstack_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">zstack_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">zstack_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>        
+    
+    <span class="k">return</span> <span class="n">zstack_img</span></div>
+
+
+<div class="viewcode-block" id="locate_files"><a class="viewcode-back" href="../file_io.html#file_io.locate_files">[docs]</a><span class="k">def</span> <span class="nf">locate_files</span><span class="p">(</span><span class="n">infolder</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;.tif&#39;</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Locate files given by a certain extension given by the &#39;key&#39; parameter with optional keyword exclusion using &#39;exclude&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    infolder : string</span>
+<span class="sd">        top-level folder location of where the files can be found. The function will walk the entire subdirectories underneath.</span>
+<span class="sd">    key : string </span>
+<span class="sd">        the extension of the files being searched for e.g. &#39;.csv&#39;, &#39;.tif&#39;</span>
+<span class="sd">    exclude : list of strings (default=None)</span>
+<span class="sd">        keywords within files one wishes to be excluded.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    files : numpy array</span>
+<span class="sd">        an array of sorted filepaths.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="kn">import</span> <span class="nn">os</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files_</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">infolder</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files_</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">f</span> <span class="ow">and</span> <span class="s1">&#39;._&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">exclude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
+                        <span class="n">val</span><span class="o">+=</span><span class="nb">int</span><span class="p">(</span><span class="n">ex</span> <span class="ow">in</span> <span class="n">root</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                        <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                    <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                
+    <span class="n">files</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+                
+    <span class="k">return</span> <span class="n">files</span></div>
+
+
+<div class="viewcode-block" id="mkdir"><a class="viewcode-back" href="../file_io.html#file_io.mkdir">[docs]</a><span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if given directory path exists, if not creates it.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    directory : string</span>
+<span class="sd">        folderpath location. (Does not have to exist)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">os</span> 
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="save_multipage_tiff"><a class="viewcode-back" href="../file_io.html#file_io.save_multipage_tiff">[docs]</a><span class="k">def</span> <span class="nf">save_multipage_tiff</span><span class="p">(</span><span class="n">np_array</span><span class="p">,</span> <span class="n">savename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes out a numpy array of images out as a multipage tiff file.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    np_array : numpy array</span>
+<span class="sd">        an (n_frames x n_rows x n_cols x n_channels) numpy array </span>
+<span class="sd">    savename : string </span>
+<span class="sd">        filepath to save to</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">tifffile</span> <span class="k">import</span> <span class="n">imsave</span>
+    
+    <span class="n">imsave</span><span class="p">(</span><span class="n">savename</span><span class="p">,</span> <span class="n">np_array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="p">[]</span> </div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Felix Y. Zhou
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.1',
+              LANGUAGE:'en',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: ''
+          };
+      </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
