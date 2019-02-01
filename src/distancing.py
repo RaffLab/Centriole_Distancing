@@ -5,6 +5,10 @@ This module contains functions that act on the output images of the trained CNN 
 
 """
 
+import warnings
+import numpy as np 
+import image_fn
+
 def associate_peaks2centre_single(cnn_peaks, cnn_centre, dist_thresh=10, ratio_thresh=3):
     """ Uses separation centre in order to return the 1 or 2 most likely centriole positions in the local patch.
 
@@ -28,6 +32,8 @@ def associate_peaks2centre_single(cnn_peaks, cnn_centre, dist_thresh=10, ratio_t
     from sklearn.metrics.pairwise import pairwise_distances
     
     if len(cnn_peaks) > 2:
+        # if more than 2 peaks predicted by CNN then find only the two peaks closest to the predicted centre.
+        # can further improve this by insisting they lie on the same line. 
         dists = pairwise_distances(cnn_peaks[:,:2], cnn_centre)
         filt_peaks = cnn_peaks[np.argsort(np.squeeze(dists))[:2], :]
                                
@@ -98,38 +104,83 @@ def img2histogram_samples(img, thresh=0.1, samples=20):
 
     return xy_samples
         
-def fit_2dGMM(signature_x, signature_y, component=2):
-    
+def fit_2dGMM(samples_x, samples_y, n_components=2):
+    """ Fit an n-component mixture to the 2d image to resolve closely overlapping centroids given (x,y) image coordinate samples
+
+    samples_x and samples_y should be of same array length.
+
+    Parameters
+    ----------
+    samples_x : numpy array 
+        array of x-coordinates.
+    samples_y : numpy array
+        array of y-coordinates.
+    n_components : int
+        the number of Gaussian mixture components to fit, default is 2 to resolve the centriole pair.
+
+    Returns
+    -------
+    gmm_params : 3-tuple
+        Returns the fitted parameters in the mixture namely (weights, means, covariance matrices)
+    prob_samples : numpy array 
+        posterior probability of each sample belonging to each component. 
+            input shape : (n_samples, 2) 
+            output shape : (n_samples, n_components)
+    gmm : Scikit-learn GMM model instance
+        fitted Scikit-learn GMM model.
+
+    """
     from sklearn.mixture import GaussianMixture
     
-    signature = np.vstack([signature_x, signature_y]).T
+    samples_xy = np.vstack([samples_x, samples_y]).T
     
-    gmm = GaussianMixture(n_components=component)
-    gmm.fit(signature)
+    gmm = GaussianMixture(n_components=n_components)
+    gmm.fit(samples_xy)
     
     weights = gmm.weights_
     means_ = gmm.means_ 
     covars_ = gmm.covariances_
+    gmm_params = (weights, means_, covars_)
 
-    fitted_y = gmm.predict_proba(signature)
+    prob_samples = gmm.predict_proba(samples_xy)
     
-    return (weights, means_, covars_), fitted_y, gmm
+    return gmm_params, prob_samples, gmm
 
-def fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_thresh=10):
-    
+def fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_thresh=10, min_area_pair=0, max_area_pair=10000):
+    """ Fits an n-component mixture to a 2d image to resolve closely overlapping centroids
+
+    This function simplifies the calling and wraps `fit_2dGMM` so we directly give the input image. 
+
+    Parameters
+    ----------
+    centre_patch_intensity : numpy array 
+        input gray-image 
+    n_samples : int
+        the maximum number of samples to draw if the corresponding normalised image intensity was 1.
+    max_dist_thresh : int
+        the upper bound on the expected distance if it was a true pair.  
+
+    Returns
+    -------
+    filt_peaks : 3-tuple
+        returns the resolved centriole peak positions for distancing.
+
+    """
+    # thresholds mean + std. 
     thresh = np.mean(centre_patch_intensity) + np.std(centre_patch_intensity)
 
-    # attempt to do this on the full posterior graph. 
+    # draw samples according to intensity 
     xy_samples = img2histogram_samples(centre_patch_intensity, thresh=thresh, samples=n_samples)
     
     if np.sum(xy_samples>=thresh) == 0:
-        print 'not enough points recalibrating thresholds' 
+        warnings.warn('not enough points with mean + std, trying mean threshold') 
         thresh = np.mean(centre_patch_intensity)
         xy_samples = img2histogram_samples(centre_patch_intensity, thresh=thresh, samples=n_samples)
     
-#    print np.sum(np.isnan(xy_samples))
+    # fit the sample to GMM. 
     (weights, means_, covars_), fitted_y, gmm = fit_2dGMM(xy_samples[:,0], xy_samples[:,1], component=2)
     
+    # get the centroids. 
     coords1 = means_[0]
     coords2 = means_[1]
 
@@ -140,28 +191,10 @@ def fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_
     if cand_pair_dist <= max_dist_thresh:
         filt_peaks = cand_pair_peaks.copy()
     else:
-        
-#        print 'refining'
-        # filter for the component closest to the centre of the image. 
-        binary = centre_patch_intensity >= thresh
-        
-#        plt.figure()
-#        plt.imshow(binary)
-#        plt.show()
-        
-        binary_filt = filter_masks_centre( binary, min_area=0, max_area=10000)
-        
-##        plt.figure()
-##        plt.imshow(binary)
-#        plt.figure()
-#        plt.imshow(binary_filt)
-#        plt.show()
+        binary = centre_patch_intensity >= thresh        
+        binary_filt = image_fn.filter_masks( binary, min_area=min_area_pair, max_area=max_area_pair, keep_centre=True, dist_thresh=1., min_max_area_cutoff=20)
         
         centre_patch_intensity_new = binary_filt*centre_patch_intensity
-        
-#        plt.figure()
-#        plt.imshow(centre_patch_intensity_new)
-#        plt.show()
         
         # now do the detection 
         xy_samples = img2histogram_samples(centre_patch_intensity_new, thresh=thresh, samples=n_samples)
@@ -174,81 +207,35 @@ def fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_
         filt_peaks = cand_pair_peaks.copy()
         
         if len(filt_peaks) < 2:
+            # return the original 2 peaks. 
             filt_peaks = filt_peaks_backup.copy()
     
     return filt_peaks
 
 
-def filter_masks_centre( mask, min_area=10, max_area=300):
-    
-    from skimage.measure import label, regionprops
-    from skimage.filters import gaussian
-    
+def detect_2d_peaks(img, I_img, min_distance=1, filt=True, thresh=None):
+    """ Identify the centroids in the CNN predicted output images and return detected positions and intensity statistics. 
 
-    nrows, ncols = mask.shape
-    labelled = label(mask)
+    Parameters
+    ----------
+    img : numpy array
+        the CNN output probability image
+    I_img : numpy array
+        the raw gray-image 
+    min_distance : float
+        minimum separation distance between centroids in number of pixels.
+    filt : bool
+        if True, consider only peaks in the CNN output that have intensity >= thresh. If False, we use a small fixed threshold of 1e-6. 
+    thresh : None or float
+        if float, a constant threshold is used else Otsu thresholding is use to automatically set an intensity threshold.
 
-#    plt.figure()
-#    plt.imshow(labelled)
-#    plt.show()
+    Returns
+    -------
+    n_peaks_raw : int
+        Number of peaks detected without applying any intensity threshold.
+    filt_peaks : array-like
+        result array of (y,x,I) tuple of (y,x) centroid locations and associated raw pixel intensity at (y,x). If no peak is detected an empty list [] is returned. 
 
-    uniq_reg = np.unique(labelled)[1:]
-
-    mask_centre = np.array([nrows/2, ncols/2])
-#    print uniq_reg
-
-    if len(uniq_reg) == 1:
-        area = np.sum(mask)
-        
-#        print area
-        if (area > min_area) and (area < max_area):
-            return mask 
-        else:
-            return np.zeros_like(mask)
-            
-    else:
-    
-        reg = regionprops(labelled)
-        uniq_reg = np.unique(labelled)[1:]
-        
-        areas = []
-        centres = []
-    
-        for re in reg:
-            y,x = re.centroid
-            areas.append(re.area)
-            centres.append([y,x])
-            
-        centres = np.array(centres)
-        centre_dist = np.sqrt(np.sum((centres - mask_centre)**2, axis=1))
-        
-#        print centre_dist
-#        print mask_centre
-        # first take the nearest. 
-
-        largest_reg = uniq_reg[np.argmin(centre_dist)]
-        min_dist = centre_dist[np.argmin(centre_dist)]
-                               
-        if largest_reg <= 20:
-            largest_reg = uniq_reg[np.argmax(areas)]
-            min_dist = centre_dist[np.argmax(areas)]
-                               
-        if min_dist >= nrows:
-            return np.zeros_like(mask)
-#        largest_reg = uniq_reg[np.argmax(areas)]
-        else:              
-            cand_mask = labelled == largest_reg
-            
-            if np.sum(cand_mask) > min_area and np.sum(cand_mask) < max_area:
-                return cand_mask
-            else:
-                return np.zeros_like(cand_mask)
-
-
-def detect_2d_peaks(img, I_img, min_distance=1, filt=True):
-    
-    """
-    If filt: then we apply threshold otsu on the CNN image.
     """
     from skimage.feature import peak_local_max
     from skimage.filters import threshold_otsu
@@ -258,229 +245,145 @@ def detect_2d_peaks(img, I_img, min_distance=1, filt=True):
     
     if len(peaks) > 0: 
         
-        I_peak = img[peaks[:,0], peaks[:,1]] # take the peak intesnty from the image. 
+        I_peak = img[peaks[:,0], peaks[:,1]] # take the peak intensity from the image. 
         I_img_peak = I_img[peaks[:,0], peaks[:,1]]
         
         if filt == True:
-            thresh = threshold_otsu(img)
-#            thresh = 1e-6
+            if thresh is None:
+                thresh = threshold_otsu(img) # 1e-6 is also a good choice. 
             I_peak_out = I_img_peak[I_peak >= thresh]
             peaks = peaks[I_peak >= thresh]
 
             if len(peaks) > 0:
-                return n_peaks_raw, np.hstack([peaks, I_peak_out[:,None]])
+                filt_peaks = np.hstack([peaks, I_peak_out[:,None]])
+                return n_peaks_raw, filt_peaks
             else:
-                return n_peaks_raw, []
+                filt_peaks = []
+                return n_peaks_raw, filt_peaks
         else:
             thresh = 1e-6
             I_peak_out = I_img_peak[I_peak >= thresh]
             peaks = peaks[I_peak >= thresh]
 
             if len(peaks) > 0:
-                return n_peaks_raw, np.hstack([peaks, I_peak_out[:,None]])
+                filt_peaks = np.hstack([peaks, I_peak_out[:,None]])
+                return n_peaks_raw, filt_peaks
             else:
                 return n_peaks_raw, []
     else:
-        return n_peaks_raw, []
+        filt_peaks = []
+        return n_peaks_raw, filt_peaks
 
 
+def detect_2d_peaks_stack(img_stack, I_img_stack, min_distance=1, filt=True, thresh=None):
+    """ Wrapper for :meth:`detect_2d_peaks` extending it to work on a stack of input images. 
 
-def predict_centrioles_CNN_GMM(imstack, cnnstack, min_distance=1, filt=True, dist_thresh=15, ratio_thresh=4):
-    
-    from skimage.feature import peak_local_max
-    """
-    Post-filter results.
-    """
-    distances = []
-    
-    for ii in range(len(imstack)):
-        
-        zstack = imstack[ii]
-        out = cnnstack[ii]
-    
-        # 1. locate centriole peaks. (there might be none? depending on the quality of initial detection?)
-        n_cnn_peaks_raw, cnn_peaks = detect_2d_peaks(out[:,:,0], zstack, min_distance=min_distance, filt=filt)
-        
-        if len(cnn_peaks) > 0:
-            # 2. locate centres between the points. 
-            cnn_centre = peak_local_max(out[:,:,1], num_peaks=1) # only the highest peak. 
-    #                cnn_centre = np.array([[test_zstack.shape[0]//2, test_zstack.shape[1]//2]]) 
-            
-            """
-            can this be improved? 
-            """
-#            print(len(cnn_peaks), len(cnn_centre))
-            
-            if len(cnn_centre) == 0:
-                cnn_centre = np.array([[zstack.shape[0]//2, zstack.shape[1]//2]])  # defaults to mid point 
-            
-            # 3. associate centres to filter centriole locations. # how many to associate? Different strategy. 
-            cnn_peaks_filt = associate_peaks2centre_single(cnn_peaks, cnn_centre, dist_thresh=dist_thresh, ratio_thresh=ratio_thresh)
-            
-            # two cases: (if only one then lets run the GMM on the CNN.)
-            if len(cnn_peaks_filt) == 1: 
-                
-#                print 'single'
-                centre_patch_intensity = out[:,:, 0].copy() # use the CNN map as the cleaned up ver. 
-    #                    centre_patch_intensity = test_zstack.copy()
-                cnn_peaks_filt = fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_thresh=10)
-                
-            peak_dist = np.linalg.norm(cnn_peaks_filt[0] - cnn_peaks_filt[1]) # find the distance between the points. 
-            
-            distances.append([cnn_peaks_filt, peak_dist])
-            
-        else: 
-            distances.append([])
-            
-    return distances
+    Parameters
+    ----------
+    img_stack : numpy array
+        array of the CNN output probability images
+    I_img_stack : numpy array
+        array of raw gray-images 
+    min_distance : float
+        minimum separation distance between centroids in number of pixels.
+    filt : bool
+        if True, consider only peaks in the CNN output that have intensity >= thresh. If False, we use a small fixed threshold of 1e-6. 
+    thresh : None or float
+        if float, a constant threshold is used else Otsu thresholding is use to automatically set an intensity threshold.
 
+    Returns
+    -------
+    all_n_peaks_raw : int
+        Number of peaks detected without applying any intensity threshold.
+    all_filt_peaks : array-like
+        result array of (y,x,I) tuple of (y,x) centroid locations and associated raw pixel intensity at (y,x). If no peak is detected an empty list [] is returned. 
 
-def predict_centrioles_CNN_GMM_single(imstack, cnnstack, min_distance=1, filt=True, dist_thresh=15, ratio_thresh=4):
-    
-    from skimage.feature import peak_local_max
-    """
-    Post-filter results.
-    """
-    distances = []
-    
-    for ii in range(len(imstack)):
-        
-        zstack = imstack[ii]
-        out = cnnstack[ii]
-    
-        # 1. locate centriole peaks. (there might be none? depending on the quality of initial detection?)
-        n_cnn_peaks_raw, cnn_peaks = detect_2d_peaks(out[:,:,0], zstack, min_distance=min_distance, filt=filt)
-        
-        if len(cnn_peaks) > 0:
-            # 2. locate centres between the points. 
-#            cnn_centre = peak_local_max(out[:,:,1], num_peaks=1) # only the highest peak. 
-            cnn_centre = np.array([[zstack.shape[0]//2, zstack.shape[1]//2]]) 
-            
-            """
-            can this be improved? 
-            """
-#            print(len(cnn_peaks), len(cnn_centre))
-            
-            if len(cnn_centre) == 0:
-                cnn_centre = np.array([[zstack.shape[0]//2, zstack.shape[1]//2]])  # defaults to mid point 
-            
-            # 3. associate centres to filter centriole locations. # how many to associate? Different strategy. 
-            cnn_peaks_filt = associate_peaks2centre_single(cnn_peaks, cnn_centre, dist_thresh=dist_thresh, ratio_thresh=ratio_thresh)
-            
-            # two cases: (if only one then lets run the GMM on the CNN.)
-            if len(cnn_peaks_filt) == 1: 
-                
-#                print 'single'
-                centre_patch_intensity = out[:,:, 0].copy() # use the CNN map as the cleaned up ver. 
-    #                    centre_patch_intensity = test_zstack.copy()
-                cnn_peaks_filt = fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_thresh=10)
-                
-            peak_dist = np.linalg.norm(cnn_peaks_filt[0] - cnn_peaks_filt[1]) # find the distance between the points. 
-            
-            distances.append([cnn_peaks_filt, peak_dist])
-            
-        else: 
-            distances.append([])
-            
-    return distances
-
-
-def annotations_to_dots_multi(xstack, ystack):
-    
-    from skimage.measure import label, regionprops
-    from skimage.filters import gaussian
-    
-    cells = []
-    dots = []
-    dists = []
-    peaks = []
-
-    for i in range(len(ystack)):
-        y = ystack[i]
-        n_rows, n_cols, n_channels = y.shape
-        y_out = []
-        dists_out = []
-        peaks_out = []
-
-        for j in range(n_channels):
-            labelled = label(y[:,:,j]>10) # threshold.
-            n_regions = len(np.unique(labelled)) - 1
-            
-            if j == 0:
-                if n_regions == 2:
-                    # retrieve centroids of labelled regions. 
-                    cents = ret_centroids_regionprops(labelled)
-                else:
-                    # it should be 1 and we use local peaks to retrieve.
-                    cents = ret_centroids_localpeaks(y>10)
-                    
-                # check if centroids == 2. 
-                if len(cents) == 2:
-                    new_y = np.zeros((n_rows, n_cols), dtype=np.int)
-                    cents = cents.astype(np.int)
-                    for cent in cents:
-                        new_y[cent[0], cent[1]] = 1
-                    
-                    y_out.append(new_y)
-                    dists_out.append(np.linalg.norm(cents[0]-cents[1],2))
-                    peaks_out.append(cents[None,:])
-            elif j > 0: # for other annotation channels. 
-                cents = ret_centroids_regionprops(labelled)
-                new_y = np.zeros((n_rows, n_cols), dtype=np.int)
-                cents = cents.astype(np.int)
-                if len(cents) == 1:
-                    new_y[cents[:,0], cents[:,1]] = 1
-                    y_out.append(new_y)
-
-        if len(y_out) == n_channels:
-            cells.append(xstack[i][None,:])
-            dots.append(np.dstack(y_out)[None,:])
-            dists.append(np.hstack(dists_out))
-            peaks.append(np.concatenate(peaks_out, axis=0))
-            
-    peak_stack = np.vstack([p[0] for p in peaks])
-    peak_ids = np.hstack([[i]*len(peaks[i][0]) for i in range(len(peaks))])
-    
-#    print(peak_stack.shape, len(peak_ids))
-    peak_stack = np.hstack([peak_ids[:,None], peak_stack])
-           
-    return np.concatenate(cells, axis=0), np.concatenate(dots, axis=0), np.hstack(dists), np.concatenate(peaks, axis=0), peak_stack
-
-def fetch_CNN_peaks(img_stack, I_img_stack, min_distance=1, filt=True):
-    
-    """
-    If filt: then we apply threshold otsu on the CNN image.
     """
     from skimage.feature import peak_local_max
     from skimage.filters import threshold_otsu
     
-    all_peaks = []
-    
+    all_filt_peaks = []
+    all_n_peaks_raw = []
+
     # iterate through
-    for ii, _ in enumerate(img_stack):
+    for ii, img in enumerate(img_stack):
+        I_img = I_img_stack[ii]
+        n_raw_peaks_img, peaks_img = detect_2d_peaks(img, I_img, min_distance=min_distance, filt=filt, thresh=thresh)
+        all_n_peaks_raw.append(n_raw_peaks_img)
+        all_filt_peaks.append(peaks_img)
+
+    all_n_peaks_raw = np.hstack(all_n_peaks_raw)
+
+    return all_n_peaks_raw, all_filt_peaks
+
+
+def predict_centrioles_CNN_GMM(imstack, cnnstack, min_distance=1, filt=True, p_thresh=None, dist_thresh=15, ratio_thresh=4, nsamples_GMM=1000, max_dist_thresh_GMM=10):
+    """ Wrapper function to take the input image stack and the predicted CNN output image stack and return distances.
+
+    Parameters
+    ----------
+    imstack : numpy array
+        array of input images for distancing.
+    cnnstack : numpy array
+        array of CNN output probability images.
+    min_distance : float
+        minimum separation distance between detected centroids in number of pixels.
+    filt : bool
+        if True, consider only peaks in the CNN output that have intensity >= p_thresh. If False, we use a small fixed threshold of 1e-6. 
+    p_thresh : None or float
+        minimum intensity threshold to filter detected peaks in CNN output. If None uses a threshold derived from Otsu's thresholding
+    dist_thresh : None or float
+        the upper bound on the expected distance if it was a true pair.
+    ratio_thresh : float
+        ratio of more intense over less intense centriole in a pair, > ratio_thresh, the pair is designated not similar in pixel intensity and only the brighter centriole is returned.
+    nsamples_GMM : 
+    max_dist_thresh_GMM :
+
+    Returns
+    -------
+    distances : array
+        list of [(y,x), d] list of detected (y,x) centroids and distance between the detected positions for each image. Returns empty array [] if no peaks are present.
+
+    """
+    from skimage.feature import peak_local_max
+
+    distances = []
     
-        img = np.squeeze(img_stack[ii])
-        peaks = peak_local_max(img, min_distance=min_distance)
+    for ii in range(len(imstack)):
         
-        if len(peaks) > 0: 
+        zstack = imstack[ii]
+        out = cnnstack[ii]
+
+        # 1. locate centriole peaks. 
+        n_cnn_peaks_raw, cnn_peaks = detect_2d_peaks(out[:,:,0], zstack, min_distance=min_distance, filt=filt, thresh=p_thresh)
+        
+        # if find detection:
+        if len(cnn_peaks) > 0:
+            # 2. locate centres between the points. 
+            if out.shape[-1] > 1:
+                cnn_centre = peak_local_max(out[:,:,1], num_peaks=1) # only the highest peak. 
+            else:
+                # centre of the image. 
+                cnn_centre = np.array([[test_zstack.shape[0]//2, test_zstack.shape[1]//2]]) 
             
-            I_peak = img[peaks[:,0], peaks[:,1]] # take the peak intesnty from the image. 
-    #        p_peak = I_img[peaks[:,0], peaks[:,1]]
+            # default to mid-point also if no peak is detected using CNN images. 
+            if len(cnn_centre) == 0:
+                cnn_centre = np.array([[zstack.shape[0]//2, zstack.shape[1]//2]])  # defaults to mid point 
             
-            if filt == True:
-#                thresh = threshold_otsu(img)
-                thresh = 1e-6
-                I_peak_out = I_peak[I_peak >= thresh]
-                peaks = peaks[I_peak >= thresh]
-    
-                if len(peaks) > 0:
-                    all_peaks.append( np.hstack([ ii*np.ones(len(peaks))[:,None], peaks, I_peak_out[:,None]]) )
-                else:
-                    all_peaks.append([])
-        else:
-            all_peaks.append([[]])
+            # 3. associate centres to filter centriole locations. # how many to associate? Different strategy. 
+            cnn_peaks_filt = associate_peaks2centre_single(cnn_peaks, cnn_centre, dist_thresh=dist_thresh, ratio_thresh=ratio_thresh)
             
-    return all_peaks
+            # two cases: (if only one then lets run the GMM on the CNN.)
+            if len(cnn_peaks_filt) == 1: 
+                centre_patch_intensity = out[:,:, 0].copy() # use the CNN map as the cleaned up ver. 
+                cnn_peaks_filt = fitGMM_patch_post_process( centre_patch_intensity, n_samples=nsamples_GMM, max_dist_thresh=max_dist_thresh_GMM)
+                
+            peak_dist = np.linalg.norm(cnn_peaks_filt[0] - cnn_peaks_filt[1]) # find the distance between the points. 
+            distances.append([cnn_peaks_filt, peak_dist])
+        else: 
+            distances.append([])
+
+    return distances
 
 
 if __name__=="__main__":

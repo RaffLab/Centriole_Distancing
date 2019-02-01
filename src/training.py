@@ -450,7 +450,7 @@ def find_annot_centroids(labelled, method):
     
         return cents 
         
-def annotations_to_dots(xstack, ystack, min_I=10):
+def annotations_to_dots(xstack, ystack, min_I=10, return_pos=False):
     """Given image annotation, converts the annotation image to dot images where each dot is the centroid. 
 
     Parameters
@@ -464,6 +464,8 @@ def annotations_to_dots(xstack, ystack, min_I=10):
             (n_imgs x n_cols x n_tasks): for n_tasks.
     min_I : int or float
         threshold cut-off for binarising annotation images. 
+    return_pos : bool
+        whether to return the exact (y,x) coordinates of the annotated centroids.
     
     Returns
     -------
@@ -474,13 +476,19 @@ def annotations_to_dots(xstack, ystack, min_I=10):
     dists : 
         distance between manually marked centrioles 
 
+    Optional Returns
+    ----------------
+    peaks : 
+        (y,x) coordinates of each marked centriole for each output image. 
+
     """
     from skimage.measure import label, regionprops
     from skimage.filters import gaussian
     
     cells = []
     dots = []
-    dists = [] # should this be default?
+    dists = [] 
+    peaks = []
 
     for i in range(len(ystack)):
         y = ystack[i]
@@ -492,6 +500,7 @@ def annotations_to_dots(xstack, ystack, min_I=10):
         
         y_out = []
         dists_out = []
+        peaks_out = []
 
         for j in range(n_channels):
             labelled = label(y[:,:,j]>min_I) # threshold.
@@ -514,6 +523,7 @@ def annotations_to_dots(xstack, ystack, min_I=10):
                     
                     y_out.append(new_y)
                     dists_out.append(np.linalg.norm(cents[0]-cents[1],2))
+                    peaks_out.append(cents[None,:])
 
             elif j > 0: # for other annotation channels. assume only 1 dot within.
                 cents = find_annot_centroids(labelled, method='connected')
@@ -527,13 +537,17 @@ def annotations_to_dots(xstack, ystack, min_I=10):
             cells.append(xstack[i][None,:])
             dots.append(np.dstack(y_out)[None,:])
             dists.append(np.hstack(dists_out))
+            peaks.append(np.concatenate(peaks_out, axis=0))
 
     cells = np.concatenate(cells, axis=0)
     dots = np.concatenate(dots, axis=0)
     dists = np.hstack(dists)
+    peaks = np.array(peaks)
 
-    return cells, dots, dists
-
+    if return_pos:
+        return cells, dots, dists, peaks
+    else:
+        return cells, dots, dists
 
 def train_test_split(imgs, labels, split_ratio=0.8, seed=13337):
     """This function wraps the elastic transform to apply it to a batch of images. 

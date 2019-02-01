@@ -215,49 +215,40 @@ def crop_patches_from_img(zstack, centroids, width=25):
     zs = np.concatenate(zs, axis=0)
     
     return zs
-
-
-def filter_masks( mask, min_area=10, max_area=300):
-    
-    from skimage.measure import label, regionprops
-    
-    labelled = label(mask)
-    uniq_reg = np.unique(labelled)[1:]
-
-    if len(uniq_reg) == 1:
-        area = np.sum(mask)
-        
-        if (area > min_area) and (area < max_area):
-            return mask 
-        else:
-            return np.zeros_like(mask)
-            
-    else:
-    
-        reg = regionprops(labelled)
-        uniq_reg = np.unique(labelled)[1:]
-        
-        areas = []
-    
-        for re in reg:
-            areas.append(re.area)
-            
-        largest_reg = uniq_reg[np.argmax(areas)]
-                               
-        cand_mask = labelled == largest_reg
-        
-        if np.sum(cand_mask) > min_area and np.sum(cand_mask) < max_area:
-            return cand_mask
-        else:
-            return np.zeros_like(cand_mask)
     
 
-def filter_masks_centre( mask, min_area=10, max_area=300):
+def filter_masks( mask, min_area=10, max_area=300, keep_centre=True, dist_thresh=0.5, min_max_area_cutoff=20):
+    """ filters binary masks to identify the primary large area of interest. 
+
+    1. consideration of minimum and maximum area range.
+    2. preferential consideration of areas near the image centre  
+
+    if the 2nd option is used, and the found area is smaller than an expected area (min_max_area_cut_off) we default to finding the largest area. 
     
+    Parameters
+    ----------
+    mask : bool numpy array
+        input (n_rows x n_cols) binary image.
+    min_area : int
+        minimum area of region of interest.
+    max_area : int 
+        maximum area of region of interest.
+    keep_centre : bool
+        if True, preferentially consider the closest connected component to the image centre.
+    dist_thresh : float (0-1)
+        what is the upper bound on the distance between the centroid of the segmented area of interest candidate and the image centre given as a fraction of the image patch width.
+    min_max_area_cutoff : int
+        what is the minimum size below which we disregard the closest area to the image centre and fallback to the largest area. (only used if keep_centre=True)
+
+    Returns
+    -------
+    cand_mask : bool numpy array
+        either a blank image same size as input if nothing is detected or a refined binary mask with only one area of interest of same image size as the input. 
+
+    """
     from skimage.measure import label, regionprops
     from skimage.filters import gaussian
     
-
     nrows, ncols = mask.shape
     labelled = label(mask)
     uniq_reg = np.unique(labelled)[1:]
@@ -270,9 +261,7 @@ def filter_masks_centre( mask, min_area=10, max_area=300):
             return mask 
         else:
             return np.zeros_like(mask)
-            
     else:
-    
         reg = regionprops(labelled)
         uniq_reg = np.unique(labelled)[1:]
         
@@ -284,21 +273,40 @@ def filter_masks_centre( mask, min_area=10, max_area=300):
             areas.append(re.area)
             centres.append([y,x])
             
-        centres = np.array(centres)
-        centre_dist = np.sqrt(np.sum((centres - mask_centre)**2, axis=1))
+        if keep_centre:
+            centres = np.array(centres)
+            centre_dist = np.sqrt(np.sum((centres - mask_centre)**2, axis=1))
 
-        largest_reg = uniq_reg[np.argmin(centre_dist)]
-        min_dist = centre_dist[np.argmin(centre_dist)]
-                               
-        if min_dist >= 1/2.* nrows/2:
-            return np.zeros_like(mask)
-        else:              
+            largest_reg = uniq_reg[np.argmin(centre_dist)]
+            min_dist = centre_dist[np.argmin(centre_dist)]
+
+            if largest_reg <= min_max_area_cutoff:
+                # if too small then take the maximum area. 
+                largest_reg = uniq_reg[np.argmax(areas)]
+                min_dist = centre_dist[np.argmax(areas)]
+                                
+            if min_dist >= dist_thresh * nrows:
+                cand_mask = np.zeros_like(mask)
+                return cand_mask
+            else:              
+                cand_mask = labelled == largest_reg
+                
+                if np.sum(cand_mask) > min_area and np.sum(cand_mask) < max_area:
+                    return cand_mask
+                else:
+                    cand_mask = np.zeros_like(cand_mask)
+                    return cand_mask
+        else:
+            # check the maximum area. 
+            largest_reg = uniq_reg[np.argmax(areas)]
             cand_mask = labelled == largest_reg
             
             if np.sum(cand_mask) > min_area and np.sum(cand_mask) < max_area:
                 return cand_mask
             else:
-                return np.zeros_like(cand_mask)
+                cand_mask = np.zeros_like(cand_mask)
+                return cand_mask
+    
 
 
 def find_best_focus(zstack):
