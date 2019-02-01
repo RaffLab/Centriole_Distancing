@@ -78,15 +78,8 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../file_io.html">File Operations module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">Image Functions module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../training.html">Training module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../models.html">Models module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../distancing.html">Distancing module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization module</a></li>
-</ul>
-
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
             
           
         </div>
@@ -600,7 +593,7 @@
     
         <span class="k">return</span> <span class="n">cents</span> </div>
         
-<div class="viewcode-block" id="annotations_to_dots"><a class="viewcode-back" href="../training.html#training.annotations_to_dots">[docs]</a><span class="k">def</span> <span class="nf">annotations_to_dots</span><span class="p">(</span><span class="n">xstack</span><span class="p">,</span> <span class="n">ystack</span><span class="p">,</span> <span class="n">min_I</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<div class="viewcode-block" id="annotations_to_dots"><a class="viewcode-back" href="../training.html#training.annotations_to_dots">[docs]</a><span class="k">def</span> <span class="nf">annotations_to_dots</span><span class="p">(</span><span class="n">xstack</span><span class="p">,</span> <span class="n">ystack</span><span class="p">,</span> <span class="n">min_I</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">return_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Given image annotation, converts the annotation image to dot images where each dot is the centroid. </span>
 
 <span class="sd">    Parameters</span>
@@ -614,15 +607,19 @@
 <span class="sd">            (n_imgs x n_cols x n_tasks): for n_tasks.</span>
 <span class="sd">    min_I : int or float</span>
 <span class="sd">        threshold cut-off for binarising annotation images. </span>
+<span class="sd">    return_pos : bool</span>
+<span class="sd">        whether to return the exact (y,x) coordinates of the annotated centroids.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    cells : numpy array</span>
 <span class="sd">        matched input to `dots`.  </span>
-<span class="sd">    dots :</span>
+<span class="sd">    dots : numpy array</span>
 <span class="sd">        array same size as ystack with annotations converted to dots. </span>
-<span class="sd">    dists : </span>
+<span class="sd">    dists : array</span>
 <span class="sd">        distance between manually marked centrioles </span>
+<span class="sd">    peaks : (optional) array</span>
+<span class="sd">        (y,x) coordinates of each marked centriole for each output image. </span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
@@ -630,7 +627,8 @@
     
     <span class="n">cells</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">dots</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">dists</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># should this be default?</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="p">[]</span> 
+    <span class="n">peaks</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ystack</span><span class="p">)):</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">ystack</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -642,6 +640,7 @@
         
         <span class="n">y_out</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">dists_out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">peaks_out</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">):</span>
             <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">y</span><span class="p">[:,:,</span><span class="n">j</span><span class="p">]</span><span class="o">&gt;</span><span class="n">min_I</span><span class="p">)</span> <span class="c1"># threshold.</span>
@@ -664,6 +663,7 @@
                     
                     <span class="n">y_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_y</span><span class="p">)</span>
                     <span class="n">dists_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cents</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">2</span><span class="p">))</span>
+                    <span class="n">peaks_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cents</span><span class="p">[</span><span class="kc">None</span><span class="p">,:])</span>
 
             <span class="k">elif</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># for other annotation channels. assume only 1 dot within.</span>
                 <span class="n">cents</span> <span class="o">=</span> <span class="n">find_annot_centroids</span><span class="p">(</span><span class="n">labelled</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;connected&#39;</span><span class="p">)</span>
@@ -677,13 +677,17 @@
             <span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xstack</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
             <span class="n">dots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">y_out</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:])</span>
             <span class="n">dists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">dists_out</span><span class="p">))</span>
+            <span class="n">peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peaks_out</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
 
     <span class="n">cells</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">cells</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">dots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">dots</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+    <span class="n">peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">cells</span><span class="p">,</span> <span class="n">dots</span><span class="p">,</span> <span class="n">dists</span></div>
-
+    <span class="k">if</span> <span class="n">return_pos</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cells</span><span class="p">,</span> <span class="n">dots</span><span class="p">,</span> <span class="n">dists</span><span class="p">,</span> <span class="n">peaks</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cells</span><span class="p">,</span> <span class="n">dots</span><span class="p">,</span> <span class="n">dists</span></div>
 
 <div class="viewcode-block" id="train_test_split"><a class="viewcode-back" href="../training.html#training.train_test_split">[docs]</a><span class="k">def</span> <span class="nf">train_test_split</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">split_ratio</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">13337</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This function wraps the elastic transform to apply it to a batch of images. </span>

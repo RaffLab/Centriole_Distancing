@@ -471,14 +471,11 @@ def annotations_to_dots(xstack, ystack, min_I=10, return_pos=False):
     -------
     cells : numpy array
         matched input to `dots`.  
-    dots :
+    dots : numpy array
         array same size as ystack with annotations converted to dots. 
-    dists : 
+    dists : array
         distance between manually marked centrioles 
-
-    Optional Returns
-    ----------------
-    peaks : 
+    peaks : (optional) array
         (y,x) coordinates of each marked centriole for each output image. 
 
     """

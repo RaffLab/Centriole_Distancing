@@ -25,9 +25,7 @@
   
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="next" title="Training module" href="training.html" />
-    <link rel="prev" title="File Operations module" href="file_io.html" /> 
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -80,14 +78,11 @@
               
             
             
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="file_io.html">File Operations module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Image Functions module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="training.html">Training module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="models.html">Models module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization module</a></li>
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Image Functions module</a></li>
 </ul>
-
+</div>
             
           
         </div>
@@ -152,6 +147,17 @@
             
   <div class="section" id="image-functions-module">
 <h1>Image Functions module<a class="headerlink" href="#image-functions-module" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#image_fn.crop_patches_from_img" title="image_fn.crop_patches_from_img"><code class="xref py py-obj docutils literal"><span class="pre">image_fn.crop_patches_from_img</span></code></a>(zstack,&nbsp;centroids)</td>
+<td>Crop image patches from a given input image of given width at given (x,y) centroid coordinates.</td>
+</tr>
+</tbody>
+</table>
 <span class="target" id="module-image_fn"></span><p>This module contains scripts for image manipulation including denoising, enhancement and cropping functions</p>
 <dl class="function">
 <dt id="image_fn.crop_patches_from_img">
@@ -401,13 +407,49 @@
 
 <dl class="function">
 <dt id="image_fn.filter_masks">
-<code class="descclassname">image_fn.</code><code class="descname">filter_masks</code><span class="sig-paren">(</span><em>mask</em>, <em>min_area=10</em>, <em>max_area=300</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#filter_masks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.filter_masks" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="image_fn.filter_masks_centre">
-<code class="descclassname">image_fn.</code><code class="descname">filter_masks_centre</code><span class="sig-paren">(</span><em>mask</em>, <em>min_area=10</em>, <em>max_area=300</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#filter_masks_centre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.filter_masks_centre" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">image_fn.</code><code class="descname">filter_masks</code><span class="sig-paren">(</span><em>mask</em>, <em>min_area=10</em>, <em>max_area=300</em>, <em>keep_centre=True</em>, <em>dist_thresh=0.5</em>, <em>min_max_area_cutoff=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#filter_masks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.filter_masks" title="Permalink to this definition">¶</a></dt>
+<dd><p>filters binary masks to identify the primary large area of interest.</p>
+<ol class="arabic simple">
+<li>consideration of minimum and maximum area range.</li>
+<li>preferential consideration of areas near the image centre</li>
+</ol>
+<p>if the 2nd option is used, and the found area is smaller than an expected area (min_max_area_cut_off) we default to finding the largest area.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>mask</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool numpy array</span><dd><p class="first last">input (n_rows x n_cols) binary image.</p>
+</dd>
+<dt><strong>min_area</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">minimum area of region of interest.</p>
+</dd>
+<dt><strong>max_area</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">maximum area of region of interest.</p>
+</dd>
+<dt><strong>keep_centre</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">if True, preferentially consider the closest connected component to the image centre.</p>
+</dd>
+<dt><strong>dist_thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float (0-1)</span><dd><p class="first last">what is the upper bound on the distance between the centroid of the segmented area of interest candidate and the image centre given as a fraction of the image patch width.</p>
+</dd>
+<dt><strong>min_max_area_cutoff</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">what is the minimum size below which we disregard the closest area to the image centre and fallback to the largest area. (only used if keep_centre=True)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>cand_mask</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool numpy array</span><dd><p class="first last">either a blank image same size as input if nothing is detected or a refined binary mask with only one area of interest of same image size as the input.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="function">
 <dt id="image_fn.filter_noise_centroids_detection">
@@ -742,15 +784,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="training.html" class="btn btn-neutral float-right" title="Training module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="file_io.html" class="btn btn-neutral" title="File Operations module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

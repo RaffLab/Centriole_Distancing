@@ -1,6 +1,10 @@
 Image Functions module
 ===============
 
+.. autosummary::
+
+   image_fn.crop_patches_from_img
+
 .. automodule:: image_fn
     :members:
     :undoc-members:

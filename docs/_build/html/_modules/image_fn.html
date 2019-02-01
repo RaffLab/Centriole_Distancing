@@ -78,15 +78,8 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../file_io.html">File Operations module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">Image Functions module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../training.html">Training module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../models.html">Models module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../distancing.html">Distancing module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization module</a></li>
-</ul>
-
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
             
           
         </div>
@@ -365,49 +358,40 @@
     <span class="n">zs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">zs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">zs</span></div>
-
-
-<div class="viewcode-block" id="filter_masks"><a class="viewcode-back" href="../image_fn.html#image_fn.filter_masks">[docs]</a><span class="k">def</span> <span class="nf">filter_masks</span><span class="p">(</span> <span class="n">mask</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
-    
-    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
-    
-    <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-    <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniq_reg</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="p">(</span><span class="n">area</span> <span class="o">&gt;</span> <span class="n">min_area</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">area</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">mask</span> 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-            
-    <span class="k">else</span><span class="p">:</span>
-    
-        <span class="n">reg</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
-        <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
-        
-        <span class="n">areas</span> <span class="o">=</span> <span class="p">[]</span>
-    
-        <span class="k">for</span> <span class="n">re</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">:</span>
-            <span class="n">areas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
-            
-        <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">areas</span><span class="p">)]</span>
-                               
-        <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">labelled</span> <span class="o">==</span> <span class="n">largest_reg</span>
-        
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_area</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">cand_mask</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span></div>
     
 
-<div class="viewcode-block" id="filter_masks_centre"><a class="viewcode-back" href="../image_fn.html#image_fn.filter_masks_centre">[docs]</a><span class="k">def</span> <span class="nf">filter_masks_centre</span><span class="p">(</span> <span class="n">mask</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
-    
+<div class="viewcode-block" id="filter_masks"><a class="viewcode-back" href="../image_fn.html#image_fn.filter_masks">[docs]</a><span class="k">def</span> <span class="nf">filter_masks</span><span class="p">(</span> <span class="n">mask</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">keep_centre</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">min_max_area_cutoff</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; filters binary masks to identify the primary large area of interest. </span>
+
+<span class="sd">    1. consideration of minimum and maximum area range.</span>
+<span class="sd">    2. preferential consideration of areas near the image centre  </span>
+
+<span class="sd">    if the 2nd option is used, and the found area is smaller than an expected area (min_max_area_cut_off) we default to finding the largest area. </span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mask : bool numpy array</span>
+<span class="sd">        input (n_rows x n_cols) binary image.</span>
+<span class="sd">    min_area : int</span>
+<span class="sd">        minimum area of region of interest.</span>
+<span class="sd">    max_area : int </span>
+<span class="sd">        maximum area of region of interest.</span>
+<span class="sd">    keep_centre : bool</span>
+<span class="sd">        if True, preferentially consider the closest connected component to the image centre.</span>
+<span class="sd">    dist_thresh : float (0-1)</span>
+<span class="sd">        what is the upper bound on the distance between the centroid of the segmented area of interest candidate and the image centre given as a fraction of the image patch width.</span>
+<span class="sd">    min_max_area_cutoff : int</span>
+<span class="sd">        what is the minimum size below which we disregard the closest area to the image centre and fallback to the largest area. (only used if keep_centre=True)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cand_mask : bool numpy array</span>
+<span class="sd">        either a blank image same size as input if nothing is detected or a refined binary mask with only one area of interest of same image size as the input. </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
     <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
     
-
     <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
     <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
@@ -420,9 +404,7 @@
             <span class="k">return</span> <span class="n">mask</span> 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-            
     <span class="k">else</span><span class="p">:</span>
-    
         <span class="n">reg</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
         <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
         
@@ -434,21 +416,40 @@
             <span class="n">areas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
             <span class="n">centres</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">])</span>
             
-        <span class="n">centres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centres</span><span class="p">)</span>
-        <span class="n">centre_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">centres</span> <span class="o">-</span> <span class="n">mask_centre</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">keep_centre</span><span class="p">:</span>
+            <span class="n">centres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centres</span><span class="p">)</span>
+            <span class="n">centre_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">centres</span> <span class="o">-</span> <span class="n">mask_centre</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
-        <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
-        <span class="n">min_dist</span> <span class="o">=</span> <span class="n">centre_dist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
-                               
-        <span class="k">if</span> <span class="n">min_dist</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="o">/</span><span class="mf">2.</span><span class="o">*</span> <span class="n">nrows</span><span class="o">/</span><span class="mi">2</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>              
+            <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
+            <span class="n">min_dist</span> <span class="o">=</span> <span class="n">centre_dist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
+
+            <span class="k">if</span> <span class="n">largest_reg</span> <span class="o">&lt;=</span> <span class="n">min_max_area_cutoff</span><span class="p">:</span>
+                <span class="c1"># if too small then take the maximum area. </span>
+                <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">areas</span><span class="p">)]</span>
+                <span class="n">min_dist</span> <span class="o">=</span> <span class="n">centre_dist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">areas</span><span class="p">)]</span>
+                                
+            <span class="k">if</span> <span class="n">min_dist</span> <span class="o">&gt;=</span> <span class="n">dist_thresh</span> <span class="o">*</span> <span class="n">nrows</span><span class="p">:</span>
+                <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">cand_mask</span>
+            <span class="k">else</span><span class="p">:</span>              
+                <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">labelled</span> <span class="o">==</span> <span class="n">largest_reg</span>
+                
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_area</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">cand_mask</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">cand_mask</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># check the maximum area. </span>
+            <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">areas</span><span class="p">)]</span>
             <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">labelled</span> <span class="o">==</span> <span class="n">largest_reg</span>
             
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_area</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">cand_mask</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span></div>
+                <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">cand_mask</span></div>
+    
 
 
 <div class="viewcode-block" id="find_best_focus"><a class="viewcode-back" href="../image_fn.html#image_fn.find_best_focus">[docs]</a><span class="k">def</span> <span class="nf">find_best_focus</span><span class="p">(</span><span class="n">zstack</span><span class="p">):</span>

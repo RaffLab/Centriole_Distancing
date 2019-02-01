@@ -25,9 +25,7 @@
   
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="next" title="Models module" href="models.html" />
-    <link rel="prev" title="image_fn module" href="image_fn.html" /> 
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -80,14 +78,11 @@
               
             
             
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="file_io.html">file_io module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="image_fn.html">image_fn module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Training module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="models.html">Models module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualization.html">visualization module</a></li>
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Training module</a></li>
 </ul>
-
+</div>
             
           
         </div>
@@ -226,7 +221,7 @@
 
 <dl class="function">
 <dt id="training.annotations_to_dots">
-<code class="descclassname">training.</code><code class="descname">annotations_to_dots</code><span class="sig-paren">(</span><em>xstack</em>, <em>ystack</em>, <em>min_I=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#annotations_to_dots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.annotations_to_dots" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">training.</code><code class="descname">annotations_to_dots</code><span class="sig-paren">(</span><em>xstack</em>, <em>ystack</em>, <em>min_I=10</em>, <em>return_pos=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#annotations_to_dots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.annotations_to_dots" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given image annotation, converts the annotation image to dot images where each dot is the centroid.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -251,6 +246,9 @@
 <dt><strong>min_I</strong></dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span><dd><p class="first last">threshold cut-off for binarising annotation images.</p>
 </dd>
+<dt><strong>return_pos</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">whether to return the exact (y,x) coordinates of the annotated centroids.</p>
+</dd>
 </dl>
 </td>
 </tr>
@@ -258,11 +256,14 @@
 <dt><strong>cells</strong></dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">matched input to <cite>dots</cite>.</p>
 </dd>
-<dt><strong>dots :</strong></dt>
-<dd><p class="first last">array same size as ystack with annotations converted to dots.</p>
+<dt><strong>dots</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array same size as ystack with annotations converted to dots.</p>
 </dd>
-<dt><strong>dists :</strong></dt>
-<dd><p class="first last">distance between manually marked centrioles</p>
+<dt><strong>dists</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">array</span><dd><p class="first last">distance between manually marked centrioles</p>
+</dd>
+<dt><strong>peaks</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">(optional) array</span><dd><p class="first last">(y,x) coordinates of each marked centriole for each output image.</p>
 </dd>
 </dl>
 </td>
@@ -697,15 +698,6 @@ Recognition, 2003.</td></tr>
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="models.html" class="btn btn-neutral float-right" title="Models module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="image_fn.html" class="btn btn-neutral" title="image_fn module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

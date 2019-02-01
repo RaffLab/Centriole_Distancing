@@ -10,7 +10,9 @@ Contents:
 
 .. toctree::
    :maxdepth: 6
-
+ 
+.. autosummary:: 
+    :toctree: _autosummary 
    file_io
    image_fn
    training

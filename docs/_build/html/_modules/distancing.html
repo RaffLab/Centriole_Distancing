@@ -78,15 +78,8 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../file_io.html">File Operations module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">Image Functions module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../training.html">Training module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../models.html">Models module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../distancing.html">Distancing module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization module</a></li>
-</ul>
-
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
             
           
         </div>
@@ -155,6 +148,10 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+<span class="kn">import</span> <span class="nn">image_fn</span>
+
 <div class="viewcode-block" id="associate_peaks2centre_single"><a class="viewcode-back" href="../distancing.html#distancing.associate_peaks2centre_single">[docs]</a><span class="k">def</span> <span class="nf">associate_peaks2centre_single</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">,</span> <span class="n">cnn_centre</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Uses separation centre in order to return the 1 or 2 most likely centriole positions in the local patch.</span>
 
@@ -178,6 +175,8 @@
     <span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="k">import</span> <span class="n">pairwise_distances</span>
     
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># if more than 2 peaks predicted by CNN then find only the two peaks closest to the predicted centre.</span>
+        <span class="c1"># can further improve this by insisting they lie on the same line. </span>
         <span class="n">dists</span> <span class="o">=</span> <span class="n">pairwise_distances</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">],</span> <span class="n">cnn_centre</span><span class="p">)</span>
         <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">cnn_peaks</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">dists</span><span class="p">))[:</span><span class="mi">2</span><span class="p">],</span> <span class="p">:]</span>
                                
@@ -248,38 +247,83 @@
 
     <span class="k">return</span> <span class="n">xy_samples</span></div>
         
-<div class="viewcode-block" id="fit_2dGMM"><a class="viewcode-back" href="../distancing.html#distancing.fit_2dGMM">[docs]</a><span class="k">def</span> <span class="nf">fit_2dGMM</span><span class="p">(</span><span class="n">signature_x</span><span class="p">,</span> <span class="n">signature_y</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
-    
+<div class="viewcode-block" id="fit_2dGMM"><a class="viewcode-back" href="../distancing.html#distancing.fit_2dGMM">[docs]</a><span class="k">def</span> <span class="nf">fit_2dGMM</span><span class="p">(</span><span class="n">samples_x</span><span class="p">,</span> <span class="n">samples_y</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Fit an n-component mixture to the 2d image to resolve closely overlapping centroids given (x,y) image coordinate samples</span>
+
+<span class="sd">    samples_x and samples_y should be of same array length.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    samples_x : numpy array </span>
+<span class="sd">        array of x-coordinates.</span>
+<span class="sd">    samples_y : numpy array</span>
+<span class="sd">        array of y-coordinates.</span>
+<span class="sd">    n_components : int</span>
+<span class="sd">        the number of Gaussian mixture components to fit, default is 2 to resolve the centriole pair.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    gmm_params : 3-tuple</span>
+<span class="sd">        Returns the fitted parameters in the mixture namely (weights, means, covariance matrices)</span>
+<span class="sd">    prob_samples : numpy array </span>
+<span class="sd">        posterior probability of each sample belonging to each component. </span>
+<span class="sd">            input shape : (n_samples, 2) </span>
+<span class="sd">            output shape : (n_samples, n_components)</span>
+<span class="sd">    gmm : Scikit-learn GMM model instance</span>
+<span class="sd">        fitted Scikit-learn GMM model.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">sklearn.mixture</span> <span class="k">import</span> <span class="n">GaussianMixture</span>
     
-    <span class="n">signature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">signature_x</span><span class="p">,</span> <span class="n">signature_y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">samples_xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">samples_x</span><span class="p">,</span> <span class="n">samples_y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
     
-    <span class="n">gmm</span> <span class="o">=</span> <span class="n">GaussianMixture</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">component</span><span class="p">)</span>
-    <span class="n">gmm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span>
+    <span class="n">gmm</span> <span class="o">=</span> <span class="n">GaussianMixture</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">)</span>
+    <span class="n">gmm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">samples_xy</span><span class="p">)</span>
     
     <span class="n">weights</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">weights_</span>
     <span class="n">means_</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">means_</span> 
     <span class="n">covars_</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">covariances_</span>
+    <span class="n">gmm_params</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">means_</span><span class="p">,</span> <span class="n">covars_</span><span class="p">)</span>
 
-    <span class="n">fitted_y</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span>
+    <span class="n">prob_samples</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">samples_xy</span><span class="p">)</span>
     
-    <span class="k">return</span> <span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">means_</span><span class="p">,</span> <span class="n">covars_</span><span class="p">),</span> <span class="n">fitted_y</span><span class="p">,</span> <span class="n">gmm</span></div>
+    <span class="k">return</span> <span class="n">gmm_params</span><span class="p">,</span> <span class="n">prob_samples</span><span class="p">,</span> <span class="n">gmm</span></div>
 
-<div class="viewcode-block" id="fitGMM_patch_post_process"><a class="viewcode-back" href="../distancing.html#distancing.fitGMM_patch_post_process">[docs]</a><span class="k">def</span> <span class="nf">fitGMM_patch_post_process</span><span class="p">(</span> <span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">max_dist_thresh</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
-    
+<div class="viewcode-block" id="fitGMM_patch_post_process"><a class="viewcode-back" href="../distancing.html#distancing.fitGMM_patch_post_process">[docs]</a><span class="k">def</span> <span class="nf">fitGMM_patch_post_process</span><span class="p">(</span> <span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">max_dist_thresh</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">min_area_pair</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_area_pair</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Fits an n-component mixture to a 2d image to resolve closely overlapping centroids</span>
+
+<span class="sd">    This function simplifies the calling and wraps `fit_2dGMM` so we directly give the input image. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centre_patch_intensity : numpy array </span>
+<span class="sd">        input gray-image </span>
+<span class="sd">    n_samples : int</span>
+<span class="sd">        the maximum number of samples to draw if the corresponding normalised image intensity was 1.</span>
+<span class="sd">    max_dist_thresh : int</span>
+<span class="sd">        the upper bound on the expected distance if it was a true pair.  </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filt_peaks : 3-tuple</span>
+<span class="sd">        returns the resolved centriole peak positions for distancing.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># thresholds mean + std. </span>
     <span class="n">thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">)</span>
 
-    <span class="c1"># attempt to do this on the full posterior graph. </span>
+    <span class="c1"># draw samples according to intensity </span>
     <span class="n">xy_samples</span> <span class="o">=</span> <span class="n">img2histogram_samples</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">xy_samples</span><span class="o">&gt;=</span><span class="n">thresh</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span> <span class="s1">&#39;not enough points recalibrating thresholds&#39;</span> 
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;not enough points with mean + std, trying mean threshold&#39;</span><span class="p">)</span> 
         <span class="n">thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">)</span>
         <span class="n">xy_samples</span> <span class="o">=</span> <span class="n">img2histogram_samples</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
     
-<span class="c1">#    print np.sum(np.isnan(xy_samples))</span>
+    <span class="c1"># fit the sample to GMM. </span>
     <span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">means_</span><span class="p">,</span> <span class="n">covars_</span><span class="p">),</span> <span class="n">fitted_y</span><span class="p">,</span> <span class="n">gmm</span> <span class="o">=</span> <span class="n">fit_2dGMM</span><span class="p">(</span><span class="n">xy_samples</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy_samples</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">component</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     
+    <span class="c1"># get the centroids. </span>
     <span class="n">coords1</span> <span class="o">=</span> <span class="n">means_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">coords2</span> <span class="o">=</span> <span class="n">means_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
@@ -290,28 +334,10 @@
     <span class="k">if</span> <span class="n">cand_pair_dist</span> <span class="o">&lt;=</span> <span class="n">max_dist_thresh</span><span class="p">:</span>
         <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">cand_pair_peaks</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        
-<span class="c1">#        print &#39;refining&#39;</span>
-        <span class="c1"># filter for the component closest to the centre of the image. </span>
-        <span class="n">binary</span> <span class="o">=</span> <span class="n">centre_patch_intensity</span> <span class="o">&gt;=</span> <span class="n">thresh</span>
-        
-<span class="c1">#        plt.figure()</span>
-<span class="c1">#        plt.imshow(binary)</span>
-<span class="c1">#        plt.show()</span>
-        
-        <span class="n">binary_filt</span> <span class="o">=</span> <span class="n">filter_masks_centre</span><span class="p">(</span> <span class="n">binary</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
-        
-<span class="c1">##        plt.figure()</span>
-<span class="c1">##        plt.imshow(binary)</span>
-<span class="c1">#        plt.figure()</span>
-<span class="c1">#        plt.imshow(binary_filt)</span>
-<span class="c1">#        plt.show()</span>
+        <span class="n">binary</span> <span class="o">=</span> <span class="n">centre_patch_intensity</span> <span class="o">&gt;=</span> <span class="n">thresh</span>        
+        <span class="n">binary_filt</span> <span class="o">=</span> <span class="n">image_fn</span><span class="o">.</span><span class="n">filter_masks</span><span class="p">(</span> <span class="n">binary</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="n">min_area_pair</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="n">max_area_pair</span><span class="p">,</span> <span class="n">keep_centre</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">min_max_area_cutoff</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
         
         <span class="n">centre_patch_intensity_new</span> <span class="o">=</span> <span class="n">binary_filt</span><span class="o">*</span><span class="n">centre_patch_intensity</span>
-        
-<span class="c1">#        plt.figure()</span>
-<span class="c1">#        plt.imshow(centre_patch_intensity_new)</span>
-<span class="c1">#        plt.show()</span>
         
         <span class="c1"># now do the detection </span>
         <span class="n">xy_samples</span> <span class="o">=</span> <span class="n">img2histogram_samples</span><span class="p">(</span><span class="n">centre_patch_intensity_new</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
@@ -324,81 +350,35 @@
         <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">cand_pair_peaks</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filt_peaks</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># return the original 2 peaks. </span>
             <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">filt_peaks_backup</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     
     <span class="k">return</span> <span class="n">filt_peaks</span></div>
 
 
-<div class="viewcode-block" id="filter_masks_centre"><a class="viewcode-back" href="../distancing.html#distancing.filter_masks_centre">[docs]</a><span class="k">def</span> <span class="nf">filter_masks_centre</span><span class="p">(</span> <span class="n">mask</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
-    
-    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
-    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
-    
+<div class="viewcode-block" id="detect_2d_peaks"><a class="viewcode-back" href="../distancing.html#distancing.detect_2d_peaks">[docs]</a><span class="k">def</span> <span class="nf">detect_2d_peaks</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">I_img</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Identify the centroids in the CNN predicted output images and return detected positions and intensity statistics. </span>
 
-    <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span>
-    <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy array</span>
+<span class="sd">        the CNN output probability image</span>
+<span class="sd">    I_img : numpy array</span>
+<span class="sd">        the raw gray-image </span>
+<span class="sd">    min_distance : float</span>
+<span class="sd">        minimum separation distance between centroids in number of pixels.</span>
+<span class="sd">    filt : bool</span>
+<span class="sd">        if True, consider only peaks in the CNN output that have intensity &gt;= thresh. If False, we use a small fixed threshold of 1e-6. </span>
+<span class="sd">    thresh : None or float</span>
+<span class="sd">        if float, a constant threshold is used else Otsu thresholding is use to automatically set an intensity threshold.</span>
 
-<span class="c1">#    plt.figure()</span>
-<span class="c1">#    plt.imshow(labelled)</span>
-<span class="c1">#    plt.show()</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    n_peaks_raw : int</span>
+<span class="sd">        Number of peaks detected without applying any intensity threshold.</span>
+<span class="sd">    filt_peaks : array-like</span>
+<span class="sd">        result array of (y,x,I) tuple of (y,x) centroid locations and associated raw pixel intensity at (y,x). If no peak is detected an empty list [] is returned. </span>
 
-    <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
-
-    <span class="n">mask_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">nrows</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
-<span class="c1">#    print uniq_reg</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniq_reg</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-        
-<span class="c1">#        print area</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">area</span> <span class="o">&gt;</span> <span class="n">min_area</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">area</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">mask</span> 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-            
-    <span class="k">else</span><span class="p">:</span>
-    
-        <span class="n">reg</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
-        <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
-        
-        <span class="n">areas</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">centres</span> <span class="o">=</span> <span class="p">[]</span>
-    
-        <span class="k">for</span> <span class="n">re</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">:</span>
-            <span class="n">y</span><span class="p">,</span><span class="n">x</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">centroid</span>
-            <span class="n">areas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
-            <span class="n">centres</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">])</span>
-            
-        <span class="n">centres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centres</span><span class="p">)</span>
-        <span class="n">centre_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">centres</span> <span class="o">-</span> <span class="n">mask_centre</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-        
-<span class="c1">#        print centre_dist</span>
-<span class="c1">#        print mask_centre</span>
-        <span class="c1"># first take the nearest. </span>
-
-        <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
-        <span class="n">min_dist</span> <span class="o">=</span> <span class="n">centre_dist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
-                               
-        <span class="k">if</span> <span class="n">largest_reg</span> <span class="o">&lt;=</span> <span class="mi">20</span><span class="p">:</span>
-            <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">areas</span><span class="p">)]</span>
-            <span class="n">min_dist</span> <span class="o">=</span> <span class="n">centre_dist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">areas</span><span class="p">)]</span>
-                               
-        <span class="k">if</span> <span class="n">min_dist</span> <span class="o">&gt;=</span> <span class="n">nrows</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-<span class="c1">#        largest_reg = uniq_reg[np.argmax(areas)]</span>
-        <span class="k">else</span><span class="p">:</span>              
-            <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">labelled</span> <span class="o">==</span> <span class="n">largest_reg</span>
-            
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_area</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">cand_mask</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="detect_2d_peaks"><a class="viewcode-back" href="../distancing.html#distancing.detect_2d_peaks">[docs]</a><span class="k">def</span> <span class="nf">detect_2d_peaks</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">I_img</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    If filt: then we apply threshold otsu on the CNN image.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
     <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">threshold_otsu</span>
@@ -408,229 +388,145 @@
     
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> 
         
-        <span class="n">I_peak</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">peaks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># take the peak intesnty from the image. </span>
+        <span class="n">I_peak</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">peaks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># take the peak intensity from the image. </span>
         <span class="n">I_img_peak</span> <span class="o">=</span> <span class="n">I_img</span><span class="p">[</span><span class="n">peaks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span>
         
         <span class="k">if</span> <span class="n">filt</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">thresh</span> <span class="o">=</span> <span class="n">threshold_otsu</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-<span class="c1">#            thresh = 1e-6</span>
+            <span class="k">if</span> <span class="n">thresh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">thresh</span> <span class="o">=</span> <span class="n">threshold_otsu</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="c1"># 1e-6 is also a good choice. </span>
             <span class="n">I_peak_out</span> <span class="o">=</span> <span class="n">I_img_peak</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
             <span class="n">peaks</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">peaks</span><span class="p">,</span> <span class="n">I_peak_out</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]])</span>
+                <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">peaks</span><span class="p">,</span> <span class="n">I_peak_out</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]])</span>
+                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="n">filt_peaks</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="p">[]</span>
+                <span class="n">filt_peaks</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="n">filt_peaks</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">thresh</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span>
             <span class="n">I_peak_out</span> <span class="o">=</span> <span class="n">I_img_peak</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
             <span class="n">peaks</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">peaks</span><span class="p">,</span> <span class="n">I_peak_out</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]])</span>
+                <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">peaks</span><span class="p">,</span> <span class="n">I_peak_out</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]])</span>
+                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="n">filt_peaks</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="p">[]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="p">[]</span></div>
+        <span class="n">filt_peaks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="n">filt_peaks</span></div>
 
 
+<div class="viewcode-block" id="detect_2d_peaks_stack"><a class="viewcode-back" href="../distancing.html#distancing.detect_2d_peaks_stack">[docs]</a><span class="k">def</span> <span class="nf">detect_2d_peaks_stack</span><span class="p">(</span><span class="n">img_stack</span><span class="p">,</span> <span class="n">I_img_stack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Wrapper for :meth:`detect_2d_peaks` extending it to work on a stack of input images. </span>
 
-<div class="viewcode-block" id="predict_centrioles_CNN_GMM"><a class="viewcode-back" href="../distancing.html#distancing.predict_centrioles_CNN_GMM">[docs]</a><span class="k">def</span> <span class="nf">predict_centrioles_CNN_GMM</span><span class="p">(</span><span class="n">imstack</span><span class="p">,</span> <span class="n">cnnstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
-    
-    <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Post-filter results.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imstack</span><span class="p">)):</span>
-        
-        <span class="n">zstack</span> <span class="o">=</span> <span class="n">imstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">cnnstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
-    
-        <span class="c1"># 1. locate centriole peaks. (there might be none? depending on the quality of initial detection?)</span>
-        <span class="n">n_cnn_peaks_raw</span><span class="p">,</span> <span class="n">cnn_peaks</span> <span class="o">=</span> <span class="n">detect_2d_peaks</span><span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">zstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="c1"># 2. locate centres between the points. </span>
-            <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">peak_local_max</span><span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_peaks</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># only the highest peak. </span>
-    <span class="c1">#                cnn_centre = np.array([[test_zstack.shape[0]//2, test_zstack.shape[1]//2]]) </span>
-            
-            <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            can this be improved? </span>
-<span class="sd">            &quot;&quot;&quot;</span>
-<span class="c1">#            print(len(cnn_peaks), len(cnn_centre))</span>
-            
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_centre</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]])</span>  <span class="c1"># defaults to mid point </span>
-            
-            <span class="c1"># 3. associate centres to filter centriole locations. # how many to associate? Different strategy. </span>
-            <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">associate_peaks2centre_single</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">,</span> <span class="n">cnn_centre</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="n">dist_thresh</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="n">ratio_thresh</span><span class="p">)</span>
-            
-            <span class="c1"># two cases: (if only one then lets run the GMM on the CNN.)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> 
-                
-<span class="c1">#                print &#39;single&#39;</span>
-                <span class="n">centre_patch_intensity</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># use the CNN map as the cleaned up ver. </span>
-    <span class="c1">#                    centre_patch_intensity = test_zstack.copy()</span>
-                <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">fitGMM_patch_post_process</span><span class="p">(</span> <span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">max_dist_thresh</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-                
-            <span class="n">peak_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># find the distance between the points. </span>
-            
-            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">cnn_peaks_filt</span><span class="p">,</span> <span class="n">peak_dist</span><span class="p">])</span>
-            
-        <span class="k">else</span><span class="p">:</span> 
-            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
-            
-    <span class="k">return</span> <span class="n">distances</span></div>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img_stack : numpy array</span>
+<span class="sd">        array of the CNN output probability images</span>
+<span class="sd">    I_img_stack : numpy array</span>
+<span class="sd">        array of raw gray-images </span>
+<span class="sd">    min_distance : float</span>
+<span class="sd">        minimum separation distance between centroids in number of pixels.</span>
+<span class="sd">    filt : bool</span>
+<span class="sd">        if True, consider only peaks in the CNN output that have intensity &gt;= thresh. If False, we use a small fixed threshold of 1e-6. </span>
+<span class="sd">    thresh : None or float</span>
+<span class="sd">        if float, a constant threshold is used else Otsu thresholding is use to automatically set an intensity threshold.</span>
 
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    all_n_peaks_raw : int</span>
+<span class="sd">        Number of peaks detected without applying any intensity threshold.</span>
+<span class="sd">    all_filt_peaks : array-like</span>
+<span class="sd">        result array of (y,x,I) tuple of (y,x) centroid locations and associated raw pixel intensity at (y,x). If no peak is detected an empty list [] is returned. </span>
 
-<div class="viewcode-block" id="predict_centrioles_CNN_GMM_single"><a class="viewcode-back" href="../distancing.html#distancing.predict_centrioles_CNN_GMM_single">[docs]</a><span class="k">def</span> <span class="nf">predict_centrioles_CNN_GMM_single</span><span class="p">(</span><span class="n">imstack</span><span class="p">,</span> <span class="n">cnnstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
-    
-    <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Post-filter results.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imstack</span><span class="p">)):</span>
-        
-        <span class="n">zstack</span> <span class="o">=</span> <span class="n">imstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">cnnstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
-    
-        <span class="c1"># 1. locate centriole peaks. (there might be none? depending on the quality of initial detection?)</span>
-        <span class="n">n_cnn_peaks_raw</span><span class="p">,</span> <span class="n">cnn_peaks</span> <span class="o">=</span> <span class="n">detect_2d_peaks</span><span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">zstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="c1"># 2. locate centres between the points. </span>
-<span class="c1">#            cnn_centre = peak_local_max(out[:,:,1], num_peaks=1) # only the highest peak. </span>
-            <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]])</span> 
-            
-            <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            can this be improved? </span>
-<span class="sd">            &quot;&quot;&quot;</span>
-<span class="c1">#            print(len(cnn_peaks), len(cnn_centre))</span>
-            
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_centre</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]])</span>  <span class="c1"># defaults to mid point </span>
-            
-            <span class="c1"># 3. associate centres to filter centriole locations. # how many to associate? Different strategy. </span>
-            <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">associate_peaks2centre_single</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">,</span> <span class="n">cnn_centre</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="n">dist_thresh</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="n">ratio_thresh</span><span class="p">)</span>
-            
-            <span class="c1"># two cases: (if only one then lets run the GMM on the CNN.)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> 
-                
-<span class="c1">#                print &#39;single&#39;</span>
-                <span class="n">centre_patch_intensity</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># use the CNN map as the cleaned up ver. </span>
-    <span class="c1">#                    centre_patch_intensity = test_zstack.copy()</span>
-                <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">fitGMM_patch_post_process</span><span class="p">(</span> <span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">max_dist_thresh</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-                
-            <span class="n">peak_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># find the distance between the points. </span>
-            
-            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">cnn_peaks_filt</span><span class="p">,</span> <span class="n">peak_dist</span><span class="p">])</span>
-            
-        <span class="k">else</span><span class="p">:</span> 
-            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
-            
-    <span class="k">return</span> <span class="n">distances</span></div>
-
-
-<div class="viewcode-block" id="annotations_to_dots_multi"><a class="viewcode-back" href="../distancing.html#distancing.annotations_to_dots_multi">[docs]</a><span class="k">def</span> <span class="nf">annotations_to_dots_multi</span><span class="p">(</span><span class="n">xstack</span><span class="p">,</span> <span class="n">ystack</span><span class="p">):</span>
-    
-    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
-    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
-    
-    <span class="n">cells</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">dots</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">dists</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">peaks</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ystack</span><span class="p">)):</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">ystack</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span> <span class="n">n_channels</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">y_out</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">dists_out</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">peaks_out</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">):</span>
-            <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">y</span><span class="p">[:,:,</span><span class="n">j</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">10</span><span class="p">)</span> <span class="c1"># threshold.</span>
-            <span class="n">n_regions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
-            
-            <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">n_regions</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                    <span class="c1"># retrieve centroids of labelled regions. </span>
-                    <span class="n">cents</span> <span class="o">=</span> <span class="n">ret_centroids_regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># it should be 1 and we use local peaks to retrieve.</span>
-                    <span class="n">cents</span> <span class="o">=</span> <span class="n">ret_centroids_localpeaks</span><span class="p">(</span><span class="n">y</span><span class="o">&gt;</span><span class="mi">10</span><span class="p">)</span>
-                    
-                <span class="c1"># check if centroids == 2. </span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                    <span class="n">new_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
-                    <span class="n">cents</span> <span class="o">=</span> <span class="n">cents</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">cent</span> <span class="ow">in</span> <span class="n">cents</span><span class="p">:</span>
-                        <span class="n">new_y</span><span class="p">[</span><span class="n">cent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cent</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
-                    
-                    <span class="n">y_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_y</span><span class="p">)</span>
-                    <span class="n">dists_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cents</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">2</span><span class="p">))</span>
-                    <span class="n">peaks_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cents</span><span class="p">[</span><span class="kc">None</span><span class="p">,:])</span>
-            <span class="k">elif</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># for other annotation channels. </span>
-                <span class="n">cents</span> <span class="o">=</span> <span class="n">ret_centroids_regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
-                <span class="n">new_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
-                <span class="n">cents</span> <span class="o">=</span> <span class="n">cents</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="n">new_y</span><span class="p">[</span><span class="n">cents</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">cents</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
-                    <span class="n">y_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_y</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_out</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_channels</span><span class="p">:</span>
-            <span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xstack</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
-            <span class="n">dots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">y_out</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:])</span>
-            <span class="n">dists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">dists_out</span><span class="p">))</span>
-            <span class="n">peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peaks_out</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
-            
-    <span class="n">peak_stack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">peaks</span><span class="p">])</span>
-    <span class="n">peak_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">))])</span>
-    
-<span class="c1">#    print(peak_stack.shape, len(peak_ids))</span>
-    <span class="n">peak_stack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">peak_ids</span><span class="p">[:,</span><span class="kc">None</span><span class="p">],</span> <span class="n">peak_stack</span><span class="p">])</span>
-           
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">cells</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">dots</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">dists</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">peak_stack</span></div>
-
-<div class="viewcode-block" id="fetch_CNN_peaks"><a class="viewcode-back" href="../distancing.html#distancing.fetch_CNN_peaks">[docs]</a><span class="k">def</span> <span class="nf">fetch_CNN_peaks</span><span class="p">(</span><span class="n">img_stack</span><span class="p">,</span> <span class="n">I_img_stack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    If filt: then we apply threshold otsu on the CNN image.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
     <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">threshold_otsu</span>
     
-    <span class="n">all_peaks</span> <span class="o">=</span> <span class="p">[]</span>
-    
+    <span class="n">all_filt_peaks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_n_peaks_raw</span> <span class="o">=</span> <span class="p">[]</span>
+
     <span class="c1"># iterate through</span>
-    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">img_stack</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">img_stack</span><span class="p">):</span>
+        <span class="n">I_img</span> <span class="o">=</span> <span class="n">I_img_stack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+        <span class="n">n_raw_peaks_img</span><span class="p">,</span> <span class="n">peaks_img</span> <span class="o">=</span> <span class="n">detect_2d_peaks</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">I_img</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">)</span>
+        <span class="n">all_n_peaks_raw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_raw_peaks_img</span><span class="p">)</span>
+        <span class="n">all_filt_peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peaks_img</span><span class="p">)</span>
+
+    <span class="n">all_n_peaks_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">all_n_peaks_raw</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">all_n_peaks_raw</span><span class="p">,</span> <span class="n">all_filt_peaks</span></div>
+
+
+<div class="viewcode-block" id="predict_centrioles_CNN_GMM"><a class="viewcode-back" href="../distancing.html#distancing.predict_centrioles_CNN_GMM">[docs]</a><span class="k">def</span> <span class="nf">predict_centrioles_CNN_GMM</span><span class="p">(</span><span class="n">imstack</span><span class="p">,</span> <span class="n">cnnstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">p_thresh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nsamples_GMM</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">max_dist_thresh_GMM</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Wrapper function to take the input image stack and the predicted CNN output image stack and return distances.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    imstack : numpy array</span>
+<span class="sd">        array of input images for distancing.</span>
+<span class="sd">    cnnstack : numpy array</span>
+<span class="sd">        array of CNN output probability images.</span>
+<span class="sd">    min_distance : float</span>
+<span class="sd">        minimum separation distance between detected centroids in number of pixels.</span>
+<span class="sd">    filt : bool</span>
+<span class="sd">        if True, consider only peaks in the CNN output that have intensity &gt;= p_thresh. If False, we use a small fixed threshold of 1e-6. </span>
+<span class="sd">    p_thresh : None or float</span>
+<span class="sd">        minimum intensity threshold to filter detected peaks in CNN output. If None uses a threshold derived from Otsu&#39;s thresholding</span>
+<span class="sd">    dist_thresh : None or float</span>
+<span class="sd">        the upper bound on the expected distance if it was a true pair.</span>
+<span class="sd">    ratio_thresh : float</span>
+<span class="sd">        ratio of more intense over less intense centriole in a pair, &gt; ratio_thresh, the pair is designated not similar in pixel intensity and only the brighter centriole is returned.</span>
+<span class="sd">    nsamples_GMM : </span>
+<span class="sd">    max_dist_thresh_GMM :</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    distances : array</span>
+<span class="sd">        list of [(y,x), d] list of detected (y,x) centroids and distance between the detected positions for each image. Returns empty array [] if no peaks are present.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
+
+    <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
     
-        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">img_stack</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
-        <span class="n">peaks</span> <span class="o">=</span> <span class="n">peak_local_max</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imstack</span><span class="p">)):</span>
         
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> 
+        <span class="n">zstack</span> <span class="o">=</span> <span class="n">imstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">cnnstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+
+        <span class="c1"># 1. locate centriole peaks. </span>
+        <span class="n">n_cnn_peaks_raw</span><span class="p">,</span> <span class="n">cnn_peaks</span> <span class="o">=</span> <span class="n">detect_2d_peaks</span><span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">zstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">p_thresh</span><span class="p">)</span>
+        
+        <span class="c1"># if find detection:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># 2. locate centres between the points. </span>
+            <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">peak_local_max</span><span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_peaks</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># only the highest peak. </span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># centre of the image. </span>
+                <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">test_zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">test_zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]])</span> 
             
-            <span class="n">I_peak</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">peaks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># take the peak intesnty from the image. </span>
-    <span class="c1">#        p_peak = I_img[peaks[:,0], peaks[:,1]]</span>
+            <span class="c1"># default to mid-point also if no peak is detected using CNN images. </span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_centre</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]])</span>  <span class="c1"># defaults to mid point </span>
             
-            <span class="k">if</span> <span class="n">filt</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-<span class="c1">#                thresh = threshold_otsu(img)</span>
-                <span class="n">thresh</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span>
-                <span class="n">I_peak_out</span> <span class="o">=</span> <span class="n">I_peak</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
-                <span class="n">peaks</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
-    
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">all_peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span> <span class="n">ii</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">))[:,</span><span class="kc">None</span><span class="p">],</span> <span class="n">peaks</span><span class="p">,</span> <span class="n">I_peak_out</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]])</span> <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">all_peaks</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">all_peaks</span><span class="o">.</span><span class="n">append</span><span class="p">([[]])</span>
+            <span class="c1"># 3. associate centres to filter centriole locations. # how many to associate? Different strategy. </span>
+            <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">associate_peaks2centre_single</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">,</span> <span class="n">cnn_centre</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="n">dist_thresh</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="n">ratio_thresh</span><span class="p">)</span>
             
-    <span class="k">return</span> <span class="n">all_peaks</span></div>
+            <span class="c1"># two cases: (if only one then lets run the GMM on the CNN.)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> 
+                <span class="n">centre_patch_intensity</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># use the CNN map as the cleaned up ver. </span>
+                <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">fitGMM_patch_post_process</span><span class="p">(</span> <span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="n">nsamples_GMM</span><span class="p">,</span> <span class="n">max_dist_thresh</span><span class="o">=</span><span class="n">max_dist_thresh_GMM</span><span class="p">)</span>
+                
+            <span class="n">peak_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># find the distance between the points. </span>
+            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">cnn_peaks_filt</span><span class="p">,</span> <span class="n">peak_dist</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+
+    <span class="k">return</span> <span class="n">distances</span></div>
 
 
 <span class="k">if</span> <span class="n">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>

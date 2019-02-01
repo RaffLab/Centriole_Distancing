@@ -155,11 +155,6 @@
 <h1>Distancing module<a class="headerlink" href="#distancing-module" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-distancing"></span><p>This module contains functions that act on the output images of the trained CNN to carry out centriole distancing.</p>
 <dl class="function">
-<dt id="distancing.annotations_to_dots_multi">
-<code class="descclassname">distancing.</code><code class="descname">annotations_to_dots_multi</code><span class="sig-paren">(</span><em>xstack</em>, <em>ystack</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#annotations_to_dots_multi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.annotations_to_dots_multi" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
 <dt id="distancing.associate_peaks2centre_single">
 <code class="descclassname">distancing.</code><code class="descname">associate_peaks2centre_single</code><span class="sig-paren">(</span><em>cnn_peaks</em>, <em>cnn_centre</em>, <em>dist_thresh=10</em>, <em>ratio_thresh=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#associate_peaks2centre_single"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.associate_peaks2centre_single" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses separation centre in order to return the 1 or 2 most likely centriole positions in the local patch.</p>
@@ -196,30 +191,162 @@
 
 <dl class="function">
 <dt id="distancing.detect_2d_peaks">
-<code class="descclassname">distancing.</code><code class="descname">detect_2d_peaks</code><span class="sig-paren">(</span><em>img</em>, <em>I_img</em>, <em>min_distance=1</em>, <em>filt=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#detect_2d_peaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.detect_2d_peaks" title="Permalink to this definition">¶</a></dt>
-<dd><p>If filt: then we apply threshold otsu on the CNN image.</p>
+<code class="descclassname">distancing.</code><code class="descname">detect_2d_peaks</code><span class="sig-paren">(</span><em>img</em>, <em>I_img</em>, <em>min_distance=1</em>, <em>filt=True</em>, <em>thresh=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#detect_2d_peaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.detect_2d_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identify the centroids in the CNN predicted output images and return detected positions and intensity statistics.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">the CNN output probability image</p>
+</dd>
+<dt><strong>I_img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">the raw gray-image</p>
+</dd>
+<dt><strong>min_distance</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">minimum separation distance between centroids in number of pixels.</p>
+</dd>
+<dt><strong>filt</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">if True, consider only peaks in the CNN output that have intensity &gt;= thresh. If False, we use a small fixed threshold of 1e-6.</p>
+</dd>
+<dt><strong>thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">None or float</span><dd><p class="first last">if float, a constant threshold is used else Otsu thresholding is use to automatically set an intensity threshold.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>n_peaks_raw</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">Number of peaks detected without applying any intensity threshold.</p>
+</dd>
+<dt><strong>filt_peaks</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">array-like</span><dd><p class="first last">result array of (y,x,I) tuple of (y,x) centroid locations and associated raw pixel intensity at (y,x). If no peak is detected an empty list [] is returned.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="distancing.fetch_CNN_peaks">
-<code class="descclassname">distancing.</code><code class="descname">fetch_CNN_peaks</code><span class="sig-paren">(</span><em>img_stack</em>, <em>I_img_stack</em>, <em>min_distance=1</em>, <em>filt=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#fetch_CNN_peaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.fetch_CNN_peaks" title="Permalink to this definition">¶</a></dt>
-<dd><p>If filt: then we apply threshold otsu on the CNN image.</p>
+<dt id="distancing.detect_2d_peaks_stack">
+<code class="descclassname">distancing.</code><code class="descname">detect_2d_peaks_stack</code><span class="sig-paren">(</span><em>img_stack</em>, <em>I_img_stack</em>, <em>min_distance=1</em>, <em>filt=True</em>, <em>thresh=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#detect_2d_peaks_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.detect_2d_peaks_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for <a class="reference internal" href="#distancing.detect_2d_peaks" title="distancing.detect_2d_peaks"><code class="xref py py-meth docutils literal"><span class="pre">detect_2d_peaks()</span></code></a> extending it to work on a stack of input images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img_stack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of the CNN output probability images</p>
+</dd>
+<dt><strong>I_img_stack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of raw gray-images</p>
+</dd>
+<dt><strong>min_distance</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">minimum separation distance between centroids in number of pixels.</p>
+</dd>
+<dt><strong>filt</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">if True, consider only peaks in the CNN output that have intensity &gt;= thresh. If False, we use a small fixed threshold of 1e-6.</p>
+</dd>
+<dt><strong>thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">None or float</span><dd><p class="first last">if float, a constant threshold is used else Otsu thresholding is use to automatically set an intensity threshold.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>all_n_peaks_raw</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">Number of peaks detected without applying any intensity threshold.</p>
+</dd>
+<dt><strong>all_filt_peaks</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">array-like</span><dd><p class="first last">result array of (y,x,I) tuple of (y,x) centroid locations and associated raw pixel intensity at (y,x). If no peak is detected an empty list [] is returned.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
-
-<dl class="function">
-<dt id="distancing.filter_masks_centre">
-<code class="descclassname">distancing.</code><code class="descname">filter_masks_centre</code><span class="sig-paren">(</span><em>mask</em>, <em>min_area=10</em>, <em>max_area=300</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#filter_masks_centre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.filter_masks_centre" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt id="distancing.fitGMM_patch_post_process">
-<code class="descclassname">distancing.</code><code class="descname">fitGMM_patch_post_process</code><span class="sig-paren">(</span><em>centre_patch_intensity</em>, <em>n_samples=1000</em>, <em>max_dist_thresh=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#fitGMM_patch_post_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.fitGMM_patch_post_process" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">distancing.</code><code class="descname">fitGMM_patch_post_process</code><span class="sig-paren">(</span><em>centre_patch_intensity</em>, <em>n_samples=1000</em>, <em>max_dist_thresh=10</em>, <em>min_area_pair=0</em>, <em>max_area_pair=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#fitGMM_patch_post_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.fitGMM_patch_post_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits an n-component mixture to a 2d image to resolve closely overlapping centroids</p>
+<p>This function simplifies the calling and wraps <cite>fit_2dGMM</cite> so we directly give the input image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>centre_patch_intensity</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">input gray-image</p>
+</dd>
+<dt><strong>n_samples</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">the maximum number of samples to draw if the corresponding normalised image intensity was 1.</p>
+</dd>
+<dt><strong>max_dist_thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">the upper bound on the expected distance if it was a true pair.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filt_peaks</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">3-tuple</span><dd><p class="first last">returns the resolved centriole peak positions for distancing.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="function">
 <dt id="distancing.fit_2dGMM">
-<code class="descclassname">distancing.</code><code class="descname">fit_2dGMM</code><span class="sig-paren">(</span><em>signature_x</em>, <em>signature_y</em>, <em>component=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#fit_2dGMM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.fit_2dGMM" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">distancing.</code><code class="descname">fit_2dGMM</code><span class="sig-paren">(</span><em>samples_x</em>, <em>samples_y</em>, <em>n_components=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#fit_2dGMM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.fit_2dGMM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit an n-component mixture to the 2d image to resolve closely overlapping centroids given (x,y) image coordinate samples</p>
+<p>samples_x and samples_y should be of same array length.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>samples_x</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of x-coordinates.</p>
+</dd>
+<dt><strong>samples_y</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of y-coordinates.</p>
+</dd>
+<dt><strong>n_components</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">the number of Gaussian mixture components to fit, default is 2 to resolve the centriole pair.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>gmm_params</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">3-tuple</span><dd><p class="first last">Returns the fitted parameters in the mixture namely (weights, means, covariance matrices)</p>
+</dd>
+<dt><strong>prob_samples</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>posterior probability of each sample belonging to each component. </dt>
+<dd><p class="first last">input shape : (n_samples, 2) 
+output shape : (n_samples, n_components)</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>gmm</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Scikit-learn GMM model instance</span><dd><p class="first last">fitted Scikit-learn GMM model.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="function">
 <dt id="distancing.img2histogram_samples">
@@ -255,13 +382,51 @@
 
 <dl class="function">
 <dt id="distancing.predict_centrioles_CNN_GMM">
-<code class="descclassname">distancing.</code><code class="descname">predict_centrioles_CNN_GMM</code><span class="sig-paren">(</span><em>imstack</em>, <em>cnnstack</em>, <em>min_distance=1</em>, <em>filt=True</em>, <em>dist_thresh=15</em>, <em>ratio_thresh=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#predict_centrioles_CNN_GMM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.predict_centrioles_CNN_GMM" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="distancing.predict_centrioles_CNN_GMM_single">
-<code class="descclassname">distancing.</code><code class="descname">predict_centrioles_CNN_GMM_single</code><span class="sig-paren">(</span><em>imstack</em>, <em>cnnstack</em>, <em>min_distance=1</em>, <em>filt=True</em>, <em>dist_thresh=15</em>, <em>ratio_thresh=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#predict_centrioles_CNN_GMM_single"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.predict_centrioles_CNN_GMM_single" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">distancing.</code><code class="descname">predict_centrioles_CNN_GMM</code><span class="sig-paren">(</span><em>imstack</em>, <em>cnnstack</em>, <em>min_distance=1</em>, <em>filt=True</em>, <em>p_thresh=None</em>, <em>dist_thresh=15</em>, <em>ratio_thresh=4</em>, <em>nsamples_GMM=1000</em>, <em>max_dist_thresh_GMM=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#predict_centrioles_CNN_GMM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.predict_centrioles_CNN_GMM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper function to take the input image stack and the predicted CNN output image stack and return distances.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imstack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of input images for distancing.</p>
+</dd>
+<dt><strong>cnnstack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of CNN output probability images.</p>
+</dd>
+<dt><strong>min_distance</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">minimum separation distance between detected centroids in number of pixels.</p>
+</dd>
+<dt><strong>filt</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">if True, consider only peaks in the CNN output that have intensity &gt;= p_thresh. If False, we use a small fixed threshold of 1e-6.</p>
+</dd>
+<dt><strong>p_thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">None or float</span><dd><p class="first last">minimum intensity threshold to filter detected peaks in CNN output. If None uses a threshold derived from Otsu&#8217;s thresholding</p>
+</dd>
+<dt><strong>dist_thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">None or float</span><dd><p class="first last">the upper bound on the expected distance if it was a true pair.</p>
+</dd>
+<dt><strong>ratio_thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">ratio of more intense over less intense centriole in a pair, &gt; ratio_thresh, the pair is designated not similar in pixel intensity and only the brighter centriole is returned.</p>
+</dd>
+<dt><strong>nsamples_GMM :</strong></dt>
+<dd></dd>
+<dt><strong>max_dist_thresh_GMM :</strong></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>distances</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">array</span><dd><p class="first last">list of [(y,x), d] list of detected (y,x) centroids and distance between the detected positions for each image. Returns empty array [] if no peaks are present.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </div>
 
