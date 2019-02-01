@@ -79,10 +79,12 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../file_io.html">file_io module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">image_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../training_fn.html">training_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../visualization.html">visualization module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_io.html">File Operations module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">Image Functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../distancing.html">Distancing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization module</a></li>
 </ul>
 
             
@@ -174,6 +176,57 @@
     <span class="n">uint8_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mf">255.</span><span class="o">*</span><span class="p">(</span><span class="n">vidstack</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">vidstack</span><span class="p">))))</span>
     
     <span class="k">return</span> <span class="n">uint8_img</span></div>
+
+<div class="viewcode-block" id="rescale_intensity_stack"><a class="viewcode-back" href="../image_fn.html#image_fn.rescale_intensity_stack">[docs]</a><span class="k">def</span> <span class="nf">rescale_intensity_stack</span><span class="p">(</span><span class="n">img_stack</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; rescales the intensity of a series of images given as a (n_imgs x n_rows x n_cols x channels) tensor such that it is [0,255] for uint8 and [0,1] for floats.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img_stack : numpy array</span>
+<span class="sd">        an input image of 3 or 4 dimensions:</span>
+<span class="sd">            (n_imgs x n_rows x n_cols): gray-image stack</span>
+<span class="sd">            (n_imgs x n_rows x n_cols x 3): rgb-image stack</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img_stack_rescale : numpy array</span>
+<span class="sd">        intensity rescaled images with range [0,255] for uint8 and [0,1] for floats</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.exposure</span> <span class="k">import</span> <span class="n">rescale_intensity</span>
+    <span class="n">img_stack_rescale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">im</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:]</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">img_stack</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">img_stack_rescale</span></div>
+
+<div class="viewcode-block" id="resize_img_stack"><a class="viewcode-back" href="../image_fn.html#image_fn.resize_img_stack">[docs]</a><span class="k">def</span> <span class="nf">resize_img_stack</span><span class="p">(</span><span class="n">img_stack</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span><span class="mi">256</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot; Resizes a series of images given as a (n_imgs x n_rows x n_cols x channels) tensor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img_stack : numpy array</span>
+<span class="sd">        an input image of 3 or 4 dimensions:</span>
+<span class="sd">            (n_imgs x n_rows x n_cols): gray-image stack</span>
+<span class="sd">            (n_imgs x n_rows x n_cols x 3): rgb-image stack</span>
+<span class="sd">    shape : 2-tuple</span>
+<span class="sd">        (row_size, col_size) tuple giving the desired output image dimension </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img_stack_new : numpy array</span>
+<span class="sd">        a numpy array of resized input:</span>
+<span class="sd">            (n_imgs x shape[0] x shape[1]): gray-image stack</span>
+<span class="sd">            (n_imgs x shape[0] x shape[1] x 3): rgb-image stack</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="k">import</span> <span class="n">resize</span>
+    <span class="n">img_stack_new</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">imgs</span><span class="p">:</span>
+        <span class="n">img_stack_new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">resize</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">output_shape</span><span class="o">=</span><span class="n">shape</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:])</span>
+    
+    <span class="n">img_stack_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">imgs_</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">img_stack_new</span></div>
 
 <div class="viewcode-block" id="denoise_zstack"><a class="viewcode-back" href="../image_fn.html#image_fn.denoise_zstack">[docs]</a><span class="k">def</span> <span class="nf">denoise_zstack</span><span class="p">(</span><span class="n">zstack</span><span class="p">):</span>
     

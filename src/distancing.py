@@ -1,20 +1,30 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 17 18:13:51 2019
+This module contains functions that act on the output images of the trained CNN to carry out centriole distancing.
 
-@author: felix
 """
 
 def associate_peaks2centre_single(cnn_peaks, cnn_centre, dist_thresh=10, ratio_thresh=3):
-    
+    """ Uses separation centre in order to return the 1 or 2 most likely centriole positions in the local patch.
+
+    Parameters
+    ----------
+    cnn_peaks : numpy array or list 
+        array of (y,x) coordinates of potential centriole centroids.
+    cnn_centre : 2-tuple
+        the coordinate of the separation centre of the centroid pair.
+    dist_thresh : float
+        two peaks separated by a distance > dist_thresh is unlikely to be mother-daughter centriole pairs. units are pixels
+    ratio_thresh : float
+        ratio of less intense over more intense centriole in a pair, < ratio_thresh, the pair is designated not similar in pixel intensity and only the brighter centriole is returned.
+        
+    Returns
+    -------
+    cnn_peaks_filt : numpy array
+        (y,x) coordinates of the individual detected centriole centroids.
+
     """
-    set additional filters:
-    ------------------------
-        1. intensity threshold ratio check between the two peaks detected. 
-        2. distance threshold check between the two peaks detected. 
-    """
-    
     from sklearn.metrics.pairwise import pairwise_distances
     
     if len(cnn_peaks) > 2:
@@ -25,58 +35,87 @@ def associate_peaks2centre_single(cnn_peaks, cnn_centre, dist_thresh=10, ratio_t
         max_peak_pair = np.argsort(filt_peaks[:,2])
         peak_ratio = cnn_peaks[max_peak_pair[0],2] / cnn_peaks[max_peak_pair[1],2]
         
-#        print dist_pair, peak_ratio
         if dist_pair >= dist_thresh or peak_ratio < 1./ratio_thresh: # this distance criteria is probably still best somewhat. 
-            return filt_peaks[max_peak_pair[1],:2][None,:]
+            cnn_peaks_filt = filt_peaks[max_peak_pair[1],:2][None,:]
+            return cnn_peaks_filt
         else:
-            return filt_peaks[:,:2]
-        
-#        return cnn_peaks[np.argsort(np.squeeze(dists))[:2], :2] # return the 2 closest peaks. 
-        
+            cnn_peaks_filt = filt_peaks[:,:2]
+            return cnn_peaks_filt
+
     elif len(cnn_peaks) <= 2:
-        
         if len(cnn_peaks) == 2: 
             # test the intensity of the cnn_peaks and the distance.
             dist_pair = np.linalg.norm(cnn_peaks[0,:2] - cnn_peaks[1,:2])
             max_peak_pair = np.argsort(cnn_peaks[:,2])
             peak_ratio = cnn_peaks[max_peak_pair[0],2] / cnn_peaks[max_peak_pair[1],2]
             
-#            print dist_pair, peak_ratio
             if dist_pair >= dist_thresh  or peak_ratio < 1./ratio_thresh:
-                return cnn_peaks[max_peak_pair[1],:2][None,:]
+                cnn_peaks_filt = cnn_peaks[max_peak_pair[1],:2][None,:]
+                return cnn_peaks_filt
             else:
-                return cnn_peaks[:,:2]
+                cnn_peaks_filt = cnn_peaks[:,:2]
+                return cnn_peaks_filt
         elif len(cnn_peaks) == 1:
-            return cnn_peaks[:,:2]
+            cnn_peaks_filt = cnn_peaks[:,:2]
+            return cnn_peaks_filt
+
         
 def img2histogram_samples(img, thresh=0.1, samples=20):
+    """ Efficient sampling of the (x,y) image coordinate pairs proportional to the corresponding pixel intensity.
 
+    Parameters
+    ----------
+    img : numpy array 
+        (n_rows x n_cols) gray-image
+    thresh : float
+        minimum threshold below which we set all intensity to 0 to avoid sampling very low intensities.
+    samples : int
+        the maximum number of times, a position (x,y) is sampled if I(x,y) = 1 that is maximum intensity
+
+    Returns
+    -------
+    xy_samples : numpy array
+        array of (x,y) coordinates whose distribution, :math:`p(x,y)\propto I(x,y)` where :math:`I(x,y)` is the corresponding (normalised) pixel intensity at (x,y).
+
+    """
     from skimage.exposure import rescale_intensity
-    # assuming 8 bit image.
-    nrows, ncols = img.shape
-    
-    X, Y = np.meshgrid(range(ncols), range(nrows))
-    X = X.ravel()
-    Y = Y.ravel()
 
+    nrows, ncols = img.shape
+    # create coordinates.
+    X, Y = np.meshgrid(range(ncols), range(nrows)); X = X.ravel(); Y = Y.ravel()
+
+    # rescale image and set lower values to 0.
     im = rescale_intensity(img/255.)
     im[im<=thresh] = 0
     
-#    plt.figure()
-#    plt.imshow(im)
-#    plt.show()
-    
+    # sample the coordinates.
     im = (samples*im).astype(np.int)
     im = im.ravel()
     
     x_samples = np.hstack([im[i]*[X[i]] for i in range(len(im))])
     y_samples = np.hstack([im[i]*[Y[i]] for i in range(len(im))])
+    xy_samples = np.vstack([x_samples, y_samples]).T 
+
+    return xy_samples
+        
+def fit_2dGMM(signature_x, signature_y, component=2):
     
-#    return xy_samples
-    return np.vstack([x_samples, y_samples]).T  
-      
+    from sklearn.mixture import GaussianMixture
+    
+    signature = np.vstack([signature_x, signature_y]).T
+    
+    gmm = GaussianMixture(n_components=component)
+    gmm.fit(signature)
+    
+    weights = gmm.weights_
+    means_ = gmm.means_ 
+    covars_ = gmm.covariances_
+
+    fitted_y = gmm.predict_proba(signature)
+    
+    return (weights, means_, covars_), fitted_y, gmm
+
 def fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_thresh=10):
-    
     
     thresh = np.mean(centre_patch_intensity) + np.std(centre_patch_intensity)
 
@@ -138,23 +177,6 @@ def fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_
             filt_peaks = filt_peaks_backup.copy()
     
     return filt_peaks
-        
-def fit_2dGMM(signature_x, signature_y, component=2):
-    
-    from sklearn.mixture import GaussianMixture
-    
-    signature = np.vstack([signature_x, signature_y]).T
-    
-    gmm = GaussianMixture(n_components=component)
-    gmm.fit(signature)
-    
-    weights = gmm.weights_
-    means_ = gmm.means_ 
-    covars_ = gmm.covariances_
-
-    fitted_y = gmm.predict_proba(signature)
-    
-    return (weights, means_, covars_), fitted_y, gmm
 
 
 def filter_masks_centre( mask, min_area=10, max_area=300):
@@ -424,31 +446,6 @@ def annotations_to_dots_multi(xstack, ystack):
            
     return np.concatenate(cells, axis=0), np.concatenate(dots, axis=0), np.hstack(dists), np.concatenate(peaks, axis=0), peak_stack
 
-
-def ret_centroids_regionprops(labelled):
-    
-    from skimage.measure import regionprops
-    reg = regionprops(labelled)
-    
-    cents = []
-    
-    for re in reg:
-        y,x = re.centroid
-        cents.append([y,x])
-        
-    return np.array(cents)
-    
-def ret_centroids_localpeaks(binary):
-    
-    from skimage.filters import gaussian
-    from skimage.feature import peak_local_max
-    
-    im = gaussian(binary) # smooth them.
-    peaks = peak_local_max(im)
-    
-    return peaks 
-
-
 def fetch_CNN_peaks(img_stack, I_img_stack, min_distance=1, filt=True):
     
     """
@@ -485,137 +482,6 @@ def fetch_CNN_peaks(img_stack, I_img_stack, min_distance=1, filt=True):
             
     return all_peaks
 
-
-def voc_ap(rec, prec):
-  """
-  --- Official matlab code VOC2012---
-  mrec=[0 ; rec ; 1];
-  mpre=[0 ; prec ; 0];
-  for i=numel(mpre)-1:-1:1
-      mpre(i)=max(mpre(i),mpre(i+1));
-  end
-  i=find(mrec(2:end)~=mrec(1:end-1))+1;
-  ap=sum((mrec(i)-mrec(i-1)).*mpre(i));
-  """
-  rec.insert(0, 0.0) # insert 0.0 at begining of list
-  rec.append(1.0) # insert 1.0 at end of list
-  mrec = rec[:]
-  prec.insert(0, 0.0) # insert 0.0 at begining of list
-  prec.append(0.0) # insert 0.0 at end of list
-  mpre = prec[:]
-  """
-   This part makes the precision monotonically decreasing
-    (goes from the end to the beginning)
-    matlab:  for i=numel(mpre)-1:-1:1
-                mpre(i)=max(mpre(i),mpre(i+1));
-  """
-  # matlab indexes start in 1 but python in 0, so I have to do:
-  #   range(start=(len(mpre) - 2), end=0, step=-1)
-  # also the python function range excludes the end, resulting in:
-  #   range(start=(len(mpre) - 2), end=-1, step=-1)
-  for i in range(len(mpre)-2, -1, -1):
-    mpre[i] = max(mpre[i], mpre[i+1])
-  """
-   This part creates a list of indexes where the recall changes
-    matlab:  i=find(mrec(2:end)~=mrec(1:end-1))+1;
-  """
-  i_list = []
-  for i in range(1, len(mrec)):
-    if mrec[i] != mrec[i-1]:
-      i_list.append(i) # if it was matlab would be i + 1
-  """
-   The Average Precision (AP) is the area under the curve
-    (numerical integration)
-    matlab: ap=sum((mrec(i)-mrec(i-1)).*mpre(i));
-  """
-  ap = 0.0
-  for i in i_list:
-    ap += ((mrec[i]-mrec[i-1])*mpre[i])
-  return ap, mrec, mpre
-
-        
-def compute_AP(all_gt_peaks, all_pred_peaks, dist_threshold=3):
-    
-    import pylab as plt 
-    """
-    solve information retrieval. 
-    """
-    dist_threshold = dist_threshold # 10 frames or 5 mins. 
-    
-    fp = np.zeros(len(all_pred_peaks)) # how many to get wrong, 
-    tp = np.zeros(len(all_pred_peaks)) # how many we get right 
-    n_gt = np.zeros(len(all_pred_peaks)) # how many total ground-truth there are.
-    match_count_GT = np.zeros(len(all_gt_peaks))
-    
-    # rank the all_pred_peaks. 
-    all_pred_peaks_sort = all_pred_peaks[all_pred_peaks[:,-1].argsort()[::-1]] # sort by confidence
-    
-#    plt.figure()
-#    plt.plot(all_pred_peaks_sort[:,-1])
-#    plt.show()
-    
-    for ii in range(len(all_pred_peaks))[:]:
-        
-        peak = all_pred_peaks_sort[ii]
-        select_relevant = np.arange(len(all_gt_peaks))[all_gt_peaks[:,0] == peak[0]]
-        relevant_gt_peaks = all_gt_peaks[select_relevant] # which ones we consider. 
-        relevant_match_count_GT = match_count_GT[select_relevant]
-        
-#        n_gt[ii] = len(relevant_gt_peaks) # number of possible ground truths. 
-        # attempt to match. 
-        if len(relevant_gt_peaks) == 0:
-            fp[ii] = 1 # false peak. 
-        else:
-#            peak_dist = np.abs(relevant_gt_peaks[:,0] - peak[0])
-            peak_dist = relevant_gt_peaks[:,1:] - peak[1:-1][None,:]
-            peak_dist = np.sqrt(peak_dist[:,0]**2 + peak_dist[:,1]**2)
-            min_peak_id = np.argmin(peak_dist)
-            
-            # has to be within the distance thresh
-            if peak_dist[min_peak_id] <= dist_threshold:
-                if relevant_match_count_GT[min_peak_id] == 0:
-                    # true match (unique)
-                    tp[ii] = 1
-                    # update 
-#                    match_count_GT[select_relevant[min_peak_id]] = 1 # add one match. # already matched.   
-                else:
-                    # false match (non-unique)
-                    fp[ii] = 1
-            else:
-                fp[ii] = 1
-        
-#    print(np.sum(tp))
-    # plot the curve:
-    cumsum = 0
-    for idx, val in enumerate(fp):
-        fp[idx] += cumsum
-        cumsum += val
-    cumsum = 0
-    for idx, val in enumerate(tp):
-        tp[idx] += cumsum
-        cumsum += val
-        
-    #print(tp)
-    rec = tp[:].copy()
-    for idx, val in enumerate(tp):
-        rec[idx] = float(tp[idx]) / float(len(all_gt_peaks))
-    #print(rec)
-    prec = tp[:].copy()
-    for idx, val in enumerate(tp):
-        prec[idx] = float(tp[idx]) / (fp[idx] + tp[idx])
-    
-    
-    """
-    append appropriate 0 and 1. 
-    """
-    prec = np.insert(prec,0,1); prec = np.append(prec, 0)
-    rec = np.insert(rec,0,0); rec = np.append(rec, 1)
-    
-    ap, mrec, mprec = voc_ap(list(rec), list(prec))
-    
-    
-    return ap, prec, rec
-    
 
 if __name__=="__main__":
     

@@ -27,13 +27,26 @@ def uint16_2_uint8(vidstack):
     
     return uint8_img
 
-def rescale_intensity_stack(xstack):
-    
+def rescale_intensity_stack(img_stack):
+    """ rescales the intensity of a series of images given as a (n_imgs x n_rows x n_cols x channels) tensor such that it is [0,255] for uint8 and [0,1] for floats.
+
+    Parameters
+    ----------
+    img_stack : numpy array
+        an input image of 3 or 4 dimensions:
+            (n_imgs x n_rows x n_cols): gray-image stack
+            (n_imgs x n_rows x n_cols x 3): rgb-image stack
+
+    Returns
+    -------
+    img_stack_rescale : numpy array
+        intensity rescaled images with range [0,255] for uint8 and [0,1] for floats
+
+    """
     from skimage.exposure import rescale_intensity
+    img_stack_rescale = np.concatenate([rescale_intensity(im)[None,:] for im in img_stack], axis=0)
     
-    xx = np.concatenate([rescale_intensity(im)[None,:] for im in xstack], axis=0)
-    
-    return xx
+    return img_stack_rescale
 
 def resize_img_stack(img_stack, shape=(256,256)):
     """ Resizes a series of images given as a (n_imgs x n_rows x n_cols x channels) tensor.

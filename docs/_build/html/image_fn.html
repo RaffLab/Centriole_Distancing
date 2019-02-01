@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>image_fn module &mdash; Centriole Distancing 0.1 documentation</title>
+  <title>Image Functions module &mdash; Centriole Distancing 0.1 documentation</title>
   
 
   
@@ -26,8 +26,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="next" title="training_fn module" href="training_fn.html" />
-    <link rel="prev" title="file_io module" href="file_io.html" /> 
+    <link rel="next" title="Training module" href="training.html" />
+    <link rel="prev" title="File Operations module" href="file_io.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,10 +81,11 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="file_io.html">file_io module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">image_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="training_fn.html">training_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualization.html">visualization module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file_io.html">File Operations module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Image Functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization module</a></li>
 </ul>
 
             
@@ -130,7 +131,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>image_fn module</li>
+      <li>Image Functions module</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -149,9 +150,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-image_fn">
-<span id="image-fn-module"></span><h1>image_fn module<a class="headerlink" href="#module-image_fn" title="Permalink to this headline">¶</a></h1>
-<p>This module contains scripts for image manipulation including denoising, enhancement and cropping functions</p>
+  <div class="section" id="image-functions-module">
+<h1>Image Functions module<a class="headerlink" href="#image-functions-module" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-image_fn"></span><p>This module contains scripts for image manipulation including denoising, enhancement and cropping functions</p>
 <dl class="function">
 <dt id="image_fn.crop_patches_from_img">
 <code class="descclassname">image_fn.</code><code class="descname">crop_patches_from_img</code><span class="sig-paren">(</span><em>zstack</em>, <em>centroids</em>, <em>width=25</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#crop_patches_from_img"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.crop_patches_from_img" title="Permalink to this definition">¶</a></dt>
@@ -638,6 +639,76 @@
 </dd></dl>
 
 <dl class="function">
+<dt id="image_fn.rescale_intensity_stack">
+<code class="descclassname">image_fn.</code><code class="descname">rescale_intensity_stack</code><span class="sig-paren">(</span><em>img_stack</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#rescale_intensity_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.rescale_intensity_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>rescales the intensity of a series of images given as a (n_imgs x n_rows x n_cols x channels) tensor such that it is [0,255] for uint8 and [0,1] for floats.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img_stack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>an input image of 3 or 4 dimensions:</dt>
+<dd><p class="first last">(n_imgs x n_rows x n_cols): gray-image stack
+(n_imgs x n_rows x n_cols x 3): rgb-image stack</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>img_stack_rescale</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">intensity rescaled images with range [0,255] for uint8 and [0,1] for floats</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="image_fn.resize_img_stack">
+<code class="descclassname">image_fn.</code><code class="descname">resize_img_stack</code><span class="sig-paren">(</span><em>img_stack</em>, <em>shape=(256</em>, <em>256)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#resize_img_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.resize_img_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resizes a series of images given as a (n_imgs x n_rows x n_cols x channels) tensor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img_stack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>an input image of 3 or 4 dimensions:</dt>
+<dd><p class="first last">(n_imgs x n_rows x n_cols): gray-image stack
+(n_imgs x n_rows x n_cols x 3): rgb-image stack</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>shape</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">2-tuple</span><dd><p class="first last">(row_size, col_size) tuple giving the desired output image dimension</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>img_stack_new</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>a numpy array of resized input:</dt>
+<dd><p class="first last">(n_imgs x shape[0] x shape[1]): gray-image stack
+(n_imgs x shape[0] x shape[1] x 3): rgb-image stack</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="image_fn.uint16_2_uint8">
 <code class="descclassname">image_fn.</code><code class="descname">uint16_2_uint8</code><span class="sig-paren">(</span><em>vidstack</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_fn.html#uint16_2_uint8"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_fn.uint16_2_uint8" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts any input image to be of uint8 type.</p>
@@ -674,10 +745,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="training_fn.html" class="btn btn-neutral float-right" title="training_fn module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="training.html" class="btn btn-neutral float-right" title="Training module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="file_io.html" class="btn btn-neutral" title="file_io module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="file_io.html" class="btn btn-neutral" title="File Operations module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

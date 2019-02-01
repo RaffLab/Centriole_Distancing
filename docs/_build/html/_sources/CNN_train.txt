@@ -1,7 +1,7 @@
-Visualization module
+CNN Training module
 ====================
 
-.. automodule:: visualization
+.. automodule:: CNN_train
     :members:
     :undoc-members:
     :show-inheritance:

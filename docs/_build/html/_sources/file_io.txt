@@ -1,4 +1,4 @@
-file_io module
+File Operations module
 ==============
 
 .. automodule:: file_io

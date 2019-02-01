@@ -1,4 +1,4 @@
-image_fn module
+Image Functions module
 ===============
 
 .. automodule:: image_fn

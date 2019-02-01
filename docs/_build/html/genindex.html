@@ -80,10 +80,12 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="file_io.html">file_io module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="image_fn.html">image_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="training_fn.html">training_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualization.html">visualization module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file_io.html">File Operations module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_fn.html">Image Functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distancing.html">Distancing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization module</a></li>
 </ul>
 
             
@@ -148,7 +150,8 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#C"><strong>C</strong></a>
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
@@ -163,8 +166,54 @@
  | <a href="#V"><strong>V</strong></a>
  
 </div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="training.html#training.add_gamma">add_gamma() (in module training)</a>
+  </dt>
+
+      
+  <dt><a href="training.html#training.add_noise">add_noise() (in module training)</a>
+  </dt>
+
+      
+  <dt><a href="training.html#training.annotations_to_dots">annotations_to_dots() (in module training)</a>
+  </dt>
+
+      
+  <dt><a href="distancing.html#distancing.annotations_to_dots_multi">annotations_to_dots_multi() (in module distancing)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="training.html#training.apply_elastic_transform">apply_elastic_transform() (in module training)</a>
+  </dt>
+
+      
+  <dt><a href="training.html#training.apply_elastic_transform_intensity">apply_elastic_transform_intensity() (in module training)</a>
+  </dt>
+
+      
+  <dt><a href="training.html#training.apply_gaussian_to_dots">apply_gaussian_to_dots() (in module training)</a>
+  </dt>
+
+      
+  <dt><a href="distancing.html#distancing.associate_peaks2centre_single">associate_peaks2centre_single() (in module distancing)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="training.html#training.create_dot_annotations">create_dot_annotations() (in module training)</a>
+  </dt>
+
+  </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="image_fn.html#image_fn.crop_patches_from_img">crop_patches_from_img() (in module image_fn)</a>
@@ -181,11 +230,23 @@
   </dt>
 
       
+  <dt><a href="distancing.html#distancing.detect_2d_peaks">detect_2d_peaks() (in module distancing)</a>
+  </dt>
+
+      
   <dt><a href="image_fn.html#image_fn.detect_centrioles_in_img">detect_centrioles_in_img() (in module image_fn)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#models.distance_model">distance_model() (in module models)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="distancing.html#module-distancing">distancing (module)</a>
+  </dt>
+
       
   <dt><a href="visualization.html#visualization.draw_circles">draw_circles() (in module visualization)</a>
   </dt>
@@ -201,13 +262,13 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="training_fn.html#training_fn.extract_dot_annotation_mask">extract_dot_annotation_mask() (in module training_fn)</a>
+  <dt><a href="training.html#training.elastic_transform">elastic_transform() (in module training)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="training_fn.html#training_fn.extract_dot_annotation_zstack">extract_dot_annotation_zstack() (in module training_fn)</a>
+  <dt><a href="training.html#training.extract_dots">extract_dots() (in module training)</a>
   </dt>
 
   </dl></td>
@@ -216,6 +277,10 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="distancing.html#distancing.fetch_CNN_peaks">fetch_CNN_peaks() (in module distancing)</a>
+  </dt>
+
       
   <dt><a href="file_io.html#module-file_io">file_io (module)</a>
   </dt>
@@ -232,14 +297,24 @@
   <dt><a href="image_fn.html#image_fn.filter_masks">filter_masks() (in module image_fn)</a>
   </dt>
 
+      
+  <dt><a href="distancing.html#distancing.filter_masks_centre">filter_masks_centre() (in module distancing)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="image_fn.html#image_fn.filter_masks_centre">(in module image_fn)</a>
+  </dt>
+
+      </dl></dd>
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="image_fn.html#image_fn.filter_masks_centre">filter_masks_centre() (in module image_fn)</a>
+  <dt><a href="image_fn.html#image_fn.filter_noise_centroids_detection">filter_noise_centroids_detection() (in module image_fn)</a>
   </dt>
 
       
-  <dt><a href="image_fn.html#image_fn.filter_noise_centroids_detection">filter_noise_centroids_detection() (in module image_fn)</a>
+  <dt><a href="training.html#training.find_annot_centroids">find_annot_centroids() (in module training)</a>
   </dt>
 
       
@@ -250,6 +325,14 @@
   <dt><a href="image_fn.html#image_fn.find_best_focus_stacks">find_best_focus_stacks() (in module image_fn)</a>
   </dt>
 
+      
+  <dt><a href="distancing.html#distancing.fit_2dGMM">fit_2dGMM() (in module distancing)</a>
+  </dt>
+
+      
+  <dt><a href="distancing.html#distancing.fitGMM_patch_post_process">fitGMM_patch_post_process() (in module distancing)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -258,6 +341,12 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="image_fn.html#module-image_fn">image_fn (module)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="distancing.html#distancing.img2histogram_samples">img2histogram_samples() (in module distancing)</a>
   </dt>
 
   </dl></td>
@@ -287,6 +376,12 @@
   </dt>
 
   </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#module-models">models (module)</a>
+  </dt>
+
+  </dl></td>
 </tr></table>
 
 <h2 id="P">P</h2>
@@ -296,8 +391,16 @@
   <dt><a href="image_fn.html#image_fn.perona_malik">perona_malik() (in module image_fn)</a>
   </dt>
 
+      
+  <dt><a href="distancing.html#distancing.predict_centrioles_CNN_GMM">predict_centrioles_CNN_GMM() (in module distancing)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="distancing.html#distancing.predict_centrioles_CNN_GMM_single">predict_centrioles_CNN_GMM_single() (in module distancing)</a>
+  </dt>
+
       
   <dt><a href="image_fn.html#image_fn.produce_valid_img_mask">produce_valid_img_mask() (in module image_fn)</a>
   </dt>
@@ -309,7 +412,15 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="training.html#training.random_intensity">random_intensity() (in module training)</a>
+  </dt>
+
+      
   <dt><a href="file_io.html#file_io.read_multiimg_PIL">read_multiimg_PIL() (in module file_io)</a>
+  </dt>
+
+      
+  <dt><a href="file_io.html#file_io.read_rgb">read_rgb() (in module file_io)</a>
   </dt>
 
       
@@ -324,6 +435,14 @@
 
       
   <dt><a href="image_fn.html#image_fn.remove_duplicate_centrioles">remove_duplicate_centrioles() (in module image_fn)</a>
+  </dt>
+
+      
+  <dt><a href="image_fn.html#image_fn.rescale_intensity_stack">rescale_intensity_stack() (in module image_fn)</a>
+  </dt>
+
+      
+  <dt><a href="image_fn.html#image_fn.resize_img_stack">resize_img_stack() (in module image_fn)</a>
   </dt>
 
   </dl></td>
@@ -343,7 +462,17 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="training_fn.html#module-training_fn">training_fn (module)</a>
+  <dt><a href="models.html#models.train_model">train_model() (in module models)</a>
+  </dt>
+
+      
+  <dt><a href="training.html#training.train_test_split">train_test_split() (in module training)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="training.html#module-training">training (module)</a>
   </dt>
 
   </dl></td>

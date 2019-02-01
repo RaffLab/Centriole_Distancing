@@ -1,0 +1,312 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Models module &mdash; Centriole Distancing 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="next" title="Distancing module" href="distancing.html" />
+    <link rel="prev" title="Training module" href="training.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Centriole Distancing
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="file_io.html">File Operations module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_fn.html">Image Functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distancing.html">Distancing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Centriole Distancing</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Models module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/models.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-models">
+<span id="models-module"></span><h1>Models module<a class="headerlink" href="#module-models" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functions to aid in the building of the CNN architecture used by us in the paper</p>
+<dl class="function">
+<dt id="models.distance_model">
+<code class="descclassname">models.</code><code class="descname">distance_model</code><span class="sig-paren">(</span><em>n_channels=1</em>, <em>shape=None</em>, <em>N_Cls=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/models.html#distance_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.distance_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the CNN U-net model described in paper in Keras to learn centriole distancing on local image patches.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>n_channels</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">number of input image channels.</p>
+</dd>
+<dt><strong>shape</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">None or 3-tuple</span><dd><p class="first last">(n_rows x n_cols x n_channel) assuming tensorflow format. If None, the model is fully convolutional and can be applied to any size input.</p>
+</dd>
+<dt><strong>N_Cls</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">number of output channels, should equal the number of channels in annotations.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>model</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">a Keras Model class</span><dd><p class="first last">CNN model instance. Use model.summary() to get a print out of architecture.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="models.train_model">
+<code class="descclassname">models.</code><code class="descname">train_model</code><span class="sig-paren">(</span><em>train_data</em>, <em>test_data</em>, <em>model</em>, <em>model_name</em>, <em>optimizer</em>, <em>loss='mse'</em>, <em>scale_factor=1000.0</em>, <em>batch_size=128</em>, <em>max_epochs=200</em>, <em>early_stop=True</em>, <em>plot_history=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/models.html#train_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.train_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Code to train a given model and save out to the designated path as given by &#8216;model_name&#8217;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>train_data</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">2-tuple</span><dd><p class="first last">(train_x, train_y) where train_x is the images and train_y is the Gaussian dot annotation images in the train split.</p>
+</dd>
+<dt><strong>test_data</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">2-tuple</span><dd><p class="first last">(test_x, test_y) where test_x is the images and test_y is the Gaussian dot annotation images in the test split.</p>
+</dd>
+<dt><strong>model</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">a Keras model</span><dd><p class="first last">a defined Keras model</p>
+</dd>
+<dt><strong>optimizer</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Keras optimizer object</span><dd><p class="first last">the gradient descent optimizer e.g. Adam, SGD instance used to optimizer the model. We used Adam() with default settings.</p>
+</dd>
+<dt><strong>loss</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">string</span><dd><p class="first last">one of &#8216;mse&#8217; (mean squared error) or &#8216;mae&#8217; (mean absolute error)</p>
+</dd>
+<dt><strong>scale_factor</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">None or float</span><dd><p class="first last">multiplicative factor to apply to annotation images to increase the gradient in the backpropagation</p>
+</dd>
+<dt><strong>batch_size</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">number of images to batch together for training</p>
+</dd>
+<dt><strong>max_epochs</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">the maximum number of epochs to train for if early_stop is enabled else this is the number of epochs of training.</p>
+</dd>
+<dt><strong>early_stop</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">if True, monitors the minimum of the test loss. If loss does not continue to decrease for a set duration, stop the training and return the model with the best test loss.</p>
+</dd>
+<dt><strong>plot_hist</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd><p class="first last">if True, plots the training and test loss over the training period on the same axes for visualisation.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>None</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">void</span><dd><p class="first last">This function will simply save the model to the location given by model_name.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="distancing.html" class="btn btn-neutral float-right" title="Distancing module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="training.html" class="btn btn-neutral" title="Training module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Felix Y. Zhou
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.1',
+              LANGUAGE:'en',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: ''
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

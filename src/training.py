@@ -7,7 +7,7 @@ This module contains functions to aid in parsing of manual dot annotations for c
 
 import numpy as np
 
-def elastic_transform(image, alpha, sigma, alpha_affine, random_state=None, borderMode=cv2.BORDER_REFLECT_101):
+def elastic_transform(image, alpha, sigma, alpha_affine, random_state=None, borderMode='reflect'):
     """Artificially augment the # of training images by elastic image transformations
 
     Based on https://gist.github.com/erniejunior/601cdf56d2b424757de5
@@ -61,6 +61,10 @@ def elastic_transform(image, alpha, sigma, alpha_affine, random_state=None, bord
     pts1 = np.float32([center_square + square_size, [center_square[0]+square_size, center_square[1]-square_size], center_square - square_size])
     pts2 = pts1 + random_state.uniform(-alpha_affine, alpha_affine, size=pts1.shape).astype(np.float32)
     M = cv2.getAffineTransform(pts1, pts2)
+
+    if borderMode == 'reflect':
+        borderMode = cv2.BORDER_REFLECT_101
+
     image = cv2.warpAffine(image, M, shape_size[::-1], borderMode=borderMode)
 
     dx = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
@@ -255,7 +259,6 @@ def apply_elastic_transform_intensity(imgs, labels, strength=0.08, shift=0.3, si
         for j in range(N):
             im_out = elastic_transform(im_, im_.shape[1] * strength, im_.shape[1] * strength, im_.shape[1] * strength, random_state=random_state)
 
-            if multi==True:
             aug_imgs.append(im_out[:,:,:n_img_channels][None,:]) # no noise
             aug_labels.append(im_out[:,:,n_img_channels:n_img_channels+n_label_channels][None,:])  # with noise.             
             
@@ -326,17 +329,17 @@ def create_dot_annotations(xstack, ystack, sigma=5, min_I=0):
     
     Returns
     -------
-    x_ : numpy array
-        same array of input gray or RGB images matched to y_.
-    y_ : numpy array 
+    x : numpy array
+        same array of input gray or RGB images matched to y.
+    y : numpy array 
         array of corresponding annotation images for n different tasks, as represented by the number of image channels with dot annotations now replaced with Gaussians.
 
     """
     from skimage.filters import threshold_otsu, gaussian
     from skimage.measure import label, regionprops
 
-    y_ = []
-    x_ = []
+    y = []
+    x = []
     
     for i in range(len(ystack)):
         im = ystack[i]
@@ -344,9 +347,9 @@ def create_dot_annotations(xstack, ystack, sigma=5, min_I=0):
 
         if len(im.shape) == 2:
             if len(np.unique(im)) > 1: # its not blank
-                out = apply_gaussian_to_dots(im, sigma, min_I=thresh)
-                y_.append(im_out[None,:])
-                x_.append(dapi[None,:])
+                out = apply_gaussian_to_dots(im, sigma, min_I=min_I)
+                y.append(out[None,:])
+                x.append(dapi[None,:])
 
         if len(im.shape) == 3:
             # multiple channels. 
@@ -359,13 +362,13 @@ def create_dot_annotations(xstack, ystack, sigma=5, min_I=0):
 
             if len(im_out) == n_channels: # check all channels are represented. 
                 im_out = np.dstack(im_out)
-                y_.append(im_out[None,:])
-                x_.append(dapi[None,:])
+                y.append(im_out[None,:])
+                x.append(dapi[None,:])
         
-    y_ = np.concatenate(y_, axis=0)
-    x_ = np.concatenate(x_, axis=0)
+    y = np.concatenate(y, axis=0)
+    x = np.concatenate(x, axis=0)
     
-    return x_, y_
+    return x, y
     
     
 def extract_dots(img, color):

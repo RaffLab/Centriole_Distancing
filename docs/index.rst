@@ -9,11 +9,13 @@ Welcome to Centriole Distancing's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 6
 
    file_io
    image_fn
-   training_fn
+   training
+   models
+   distancing
    visualization
 
 

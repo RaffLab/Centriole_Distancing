@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>file_io module &mdash; Centriole Distancing 0.1 documentation</title>
+  <title>File Operations module &mdash; Centriole Distancing 0.1 documentation</title>
   
 
   
@@ -26,7 +26,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="next" title="image_fn module" href="image_fn.html" />
+    <link rel="next" title="Image Functions module" href="image_fn.html" />
     <link rel="prev" title="Welcome to Centriole Distancing’s documentation!" href="index.html" /> 
 
   
@@ -81,10 +81,11 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">file_io module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="image_fn.html">image_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="training_fn.html">training_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualization.html">visualization module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">File Operations module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_fn.html">Image Functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization module</a></li>
 </ul>
 
             
@@ -130,7 +131,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>file_io module</li>
+      <li>File Operations module</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -149,9 +150,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-file_io">
-<span id="file-io-module"></span><h1>file_io module<a class="headerlink" href="#module-file_io" title="Permalink to this headline">¶</a></h1>
-<p>This module contains scripts for file input/output manipulation.</p>
+  <div class="section" id="file-operations-module">
+<h1>File Operations module<a class="headerlink" href="#file-operations-module" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-file_io"></span><p>This module contains scripts for file input/output manipulation.</p>
 <dl class="function">
 <dt id="file_io.locate_files">
 <code class="descclassname">file_io.</code><code class="descname">locate_files</code><span class="sig-paren">(</span><em>infolder</em>, <em>key='.tif'</em>, <em>exclude=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/file_io.html#locate_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#file_io.locate_files" title="Permalink to this definition">¶</a></dt>
@@ -229,6 +230,38 @@
 <dt><strong>imgs</strong></dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">(n_frames x n_rows x n_cols) for grayscale, or
 (n_frames x n_rows x n_cols x 3) for RGB</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="file_io.read_rgb">
+<code class="descclassname">file_io.</code><code class="descname">read_rgb</code><span class="sig-paren">(</span><em>imgfile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/file_io.html#read_rgb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#file_io.read_rgb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads RGB image file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imgfile</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">string</span><dd><p class="first last">input file location.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>An image where the channels are stored in the third dimension, such that</dt>
+<dd><p class="first last">(n_rows x n_cols): a gray-image.
+(n_rows x n_cols x 3): an RGB-image. 
+(n_rows x n_cols x 4): an RGBA-image.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </td>
@@ -336,7 +369,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="image_fn.html" class="btn btn-neutral float-right" title="image_fn module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="image_fn.html" class="btn btn-neutral float-right" title="Image Functions module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral" title="Welcome to Centriole Distancing’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

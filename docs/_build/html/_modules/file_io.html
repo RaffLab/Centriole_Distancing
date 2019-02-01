@@ -79,10 +79,12 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../file_io.html">file_io module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">image_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../training_fn.html">training_fn module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../visualization.html">visualization module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_io.html">File Operations module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">Image Functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../distancing.html">Distancing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization module</a></li>
 </ul>
 
             
@@ -155,6 +157,29 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
 <span class="kn">import</span> <span class="nn">image_fn</span>
+
+<div class="viewcode-block" id="read_rgb"><a class="viewcode-back" href="../file_io.html#file_io.read_rgb">[docs]</a><span class="k">def</span> <span class="nf">read_rgb</span><span class="p">(</span><span class="n">imgfile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads RGB image file</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    imgfile : string</span>
+<span class="sd">        input file location.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img : numpy array</span>
+<span class="sd">        An image where the channels are stored in the third dimension, such that</span>
+<span class="sd">            (n_rows x n_cols): a gray-image.</span>
+<span class="sd">            (n_rows x n_cols x 3): an RGB-image. </span>
+<span class="sd">            (n_rows x n_cols x 4): an RGBA-image.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.io</span> <span class="k">import</span> <span class="n">imread</span>
+    
+    <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">imgfile</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">img</span></div>
 
 <div class="viewcode-block" id="read_multiimg_PIL"><a class="viewcode-back" href="../file_io.html#file_io.read_multiimg_PIL">[docs]</a><span class="k">def</span> <span class="nf">read_multiimg_PIL</span><span class="p">(</span><span class="n">tiffile</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Reads multipage .tif file</span>

@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Distancing module &mdash; Centriole Distancing 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="next" title="Visualization module" href="visualization.html" />
+    <link rel="prev" title="Models module" href="models.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Centriole Distancing
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="file_io.html">File Operations module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_fn.html">Image Functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Distancing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Centriole Distancing</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Distancing module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/distancing.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="distancing-module">
+<h1>Distancing module<a class="headerlink" href="#distancing-module" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-distancing"></span><p>This module contains functions that act on the output images of the trained CNN to carry out centriole distancing.</p>
+<dl class="function">
+<dt id="distancing.annotations_to_dots_multi">
+<code class="descclassname">distancing.</code><code class="descname">annotations_to_dots_multi</code><span class="sig-paren">(</span><em>xstack</em>, <em>ystack</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#annotations_to_dots_multi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.annotations_to_dots_multi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="distancing.associate_peaks2centre_single">
+<code class="descclassname">distancing.</code><code class="descname">associate_peaks2centre_single</code><span class="sig-paren">(</span><em>cnn_peaks</em>, <em>cnn_centre</em>, <em>dist_thresh=10</em>, <em>ratio_thresh=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#associate_peaks2centre_single"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.associate_peaks2centre_single" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses separation centre in order to return the 1 or 2 most likely centriole positions in the local patch.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>cnn_peaks</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array or list</span><dd><p class="first last">array of (y,x) coordinates of potential centriole centroids.</p>
+</dd>
+<dt><strong>cnn_centre</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">2-tuple</span><dd><p class="first last">the coordinate of the separation centre of the centroid pair.</p>
+</dd>
+<dt><strong>dist_thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">two peaks separated by a distance &gt; dist_thresh is unlikely to be mother-daughter centriole pairs. units are pixels</p>
+</dd>
+<dt><strong>ratio_thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">ratio of less intense over more intense centriole in a pair, &lt; ratio_thresh, the pair is designated not similar in pixel intensity and only the brighter centriole is returned.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>cnn_peaks_filt</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">(y,x) coordinates of the individual detected centriole centroids.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="distancing.detect_2d_peaks">
+<code class="descclassname">distancing.</code><code class="descname">detect_2d_peaks</code><span class="sig-paren">(</span><em>img</em>, <em>I_img</em>, <em>min_distance=1</em>, <em>filt=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#detect_2d_peaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.detect_2d_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>If filt: then we apply threshold otsu on the CNN image.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="distancing.fetch_CNN_peaks">
+<code class="descclassname">distancing.</code><code class="descname">fetch_CNN_peaks</code><span class="sig-paren">(</span><em>img_stack</em>, <em>I_img_stack</em>, <em>min_distance=1</em>, <em>filt=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#fetch_CNN_peaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.fetch_CNN_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>If filt: then we apply threshold otsu on the CNN image.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="distancing.filter_masks_centre">
+<code class="descclassname">distancing.</code><code class="descname">filter_masks_centre</code><span class="sig-paren">(</span><em>mask</em>, <em>min_area=10</em>, <em>max_area=300</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#filter_masks_centre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.filter_masks_centre" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="distancing.fitGMM_patch_post_process">
+<code class="descclassname">distancing.</code><code class="descname">fitGMM_patch_post_process</code><span class="sig-paren">(</span><em>centre_patch_intensity</em>, <em>n_samples=1000</em>, <em>max_dist_thresh=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#fitGMM_patch_post_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.fitGMM_patch_post_process" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="distancing.fit_2dGMM">
+<code class="descclassname">distancing.</code><code class="descname">fit_2dGMM</code><span class="sig-paren">(</span><em>signature_x</em>, <em>signature_y</em>, <em>component=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#fit_2dGMM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.fit_2dGMM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="distancing.img2histogram_samples">
+<code class="descclassname">distancing.</code><code class="descname">img2histogram_samples</code><span class="sig-paren">(</span><em>img</em>, <em>thresh=0.1</em>, <em>samples=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#img2histogram_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.img2histogram_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Efficient sampling of the (x,y) image coordinate pairs proportional to the corresponding pixel intensity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">(n_rows x n_cols) gray-image</p>
+</dd>
+<dt><strong>thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">minimum threshold below which we set all intensity to 0 to avoid sampling very low intensities.</p>
+</dd>
+<dt><strong>samples</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">the maximum number of times, a position (x,y) is sampled if I(x,y) = 1 that is maximum intensity</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>xy_samples</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of (x,y) coordinates whose distribution, <img class="math" src="_images/math/6378e093f5b6cd586e62be1c993884bee8fc47ec.png" alt="p(x,y)\propto I(x,y)"/> where <img class="math" src="_images/math/78bb272f7449e422cb3f129d8445da6378a7b8e4.png" alt="I(x,y)"/> is the corresponding (normalised) pixel intensity at (x,y).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="distancing.predict_centrioles_CNN_GMM">
+<code class="descclassname">distancing.</code><code class="descname">predict_centrioles_CNN_GMM</code><span class="sig-paren">(</span><em>imstack</em>, <em>cnnstack</em>, <em>min_distance=1</em>, <em>filt=True</em>, <em>dist_thresh=15</em>, <em>ratio_thresh=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#predict_centrioles_CNN_GMM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.predict_centrioles_CNN_GMM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="distancing.predict_centrioles_CNN_GMM_single">
+<code class="descclassname">distancing.</code><code class="descname">predict_centrioles_CNN_GMM_single</code><span class="sig-paren">(</span><em>imstack</em>, <em>cnnstack</em>, <em>min_distance=1</em>, <em>filt=True</em>, <em>dist_thresh=15</em>, <em>ratio_thresh=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/distancing.html#predict_centrioles_CNN_GMM_single"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#distancing.predict_centrioles_CNN_GMM_single" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="visualization.html" class="btn btn-neutral float-right" title="Visualization module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="models.html" class="btn btn-neutral" title="Models module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Felix Y. Zhou
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.1',
+              LANGUAGE:'en',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: ''
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

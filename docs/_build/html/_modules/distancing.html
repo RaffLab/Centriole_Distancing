@@ -1,0 +1,920 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>distancing &mdash; Centriole Distancing 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Centriole Distancing
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../file_io.html">File Operations module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">Image Functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../distancing.html">Distancing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Centriole Distancing</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>distancing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for distancing</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python2</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains functions that act on the output images of the trained CNN to carry out centriole distancing.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="associate_peaks2centre_single"><a class="viewcode-back" href="../distancing.html#distancing.associate_peaks2centre_single">[docs]</a><span class="k">def</span> <span class="nf">associate_peaks2centre_single</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">,</span> <span class="n">cnn_centre</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Uses separation centre in order to return the 1 or 2 most likely centriole positions in the local patch.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cnn_peaks : numpy array or list </span>
+<span class="sd">        array of (y,x) coordinates of potential centriole centroids.</span>
+<span class="sd">    cnn_centre : 2-tuple</span>
+<span class="sd">        the coordinate of the separation centre of the centroid pair.</span>
+<span class="sd">    dist_thresh : float</span>
+<span class="sd">        two peaks separated by a distance &gt; dist_thresh is unlikely to be mother-daughter centriole pairs. units are pixels</span>
+<span class="sd">    ratio_thresh : float</span>
+<span class="sd">        ratio of less intense over more intense centriole in a pair, &lt; ratio_thresh, the pair is designated not similar in pixel intensity and only the brighter centriole is returned.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cnn_peaks_filt : numpy array</span>
+<span class="sd">        (y,x) coordinates of the individual detected centriole centroids.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="k">import</span> <span class="n">pairwise_distances</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">pairwise_distances</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">],</span> <span class="n">cnn_centre</span><span class="p">)</span>
+        <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">cnn_peaks</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">dists</span><span class="p">))[:</span><span class="mi">2</span><span class="p">],</span> <span class="p">:]</span>
+                               
+        <span class="n">dist_pair</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">filt_peaks</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">filt_peaks</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">max_peak_pair</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">filt_peaks</span><span class="p">[:,</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">peak_ratio</span> <span class="o">=</span> <span class="n">cnn_peaks</span><span class="p">[</span><span class="n">max_peak_pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">cnn_peaks</span><span class="p">[</span><span class="n">max_peak_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">2</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">dist_pair</span> <span class="o">&gt;=</span> <span class="n">dist_thresh</span> <span class="ow">or</span> <span class="n">peak_ratio</span> <span class="o">&lt;</span> <span class="mf">1.</span><span class="o">/</span><span class="n">ratio_thresh</span><span class="p">:</span> <span class="c1"># this distance criteria is probably still best somewhat. </span>
+            <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">filt_peaks</span><span class="p">[</span><span class="n">max_peak_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">],:</span><span class="mi">2</span><span class="p">][</span><span class="kc">None</span><span class="p">,:]</span>
+            <span class="k">return</span> <span class="n">cnn_peaks_filt</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">filt_peaks</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">cnn_peaks_filt</span>
+
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> 
+            <span class="c1"># test the intensity of the cnn_peaks and the distance.</span>
+            <span class="n">dist_pair</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">cnn_peaks</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">max_peak_pair</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">[:,</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">peak_ratio</span> <span class="o">=</span> <span class="n">cnn_peaks</span><span class="p">[</span><span class="n">max_peak_pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">cnn_peaks</span><span class="p">[</span><span class="n">max_peak_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">2</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">dist_pair</span> <span class="o">&gt;=</span> <span class="n">dist_thresh</span>  <span class="ow">or</span> <span class="n">peak_ratio</span> <span class="o">&lt;</span> <span class="mf">1.</span><span class="o">/</span><span class="n">ratio_thresh</span><span class="p">:</span>
+                <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">cnn_peaks</span><span class="p">[</span><span class="n">max_peak_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">],:</span><span class="mi">2</span><span class="p">][</span><span class="kc">None</span><span class="p">,:]</span>
+                <span class="k">return</span> <span class="n">cnn_peaks_filt</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">cnn_peaks</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">cnn_peaks_filt</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">cnn_peaks</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">cnn_peaks_filt</span></div>
+
+        
+<div class="viewcode-block" id="img2histogram_samples"><a class="viewcode-back" href="../distancing.html#distancing.img2histogram_samples">[docs]</a><span class="k">def</span> <span class="nf">img2histogram_samples</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Efficient sampling of the (x,y) image coordinate pairs proportional to the corresponding pixel intensity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy array </span>
+<span class="sd">        (n_rows x n_cols) gray-image</span>
+<span class="sd">    thresh : float</span>
+<span class="sd">        minimum threshold below which we set all intensity to 0 to avoid sampling very low intensities.</span>
+<span class="sd">    samples : int</span>
+<span class="sd">        the maximum number of times, a position (x,y) is sampled if I(x,y) = 1 that is maximum intensity</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xy_samples : numpy array</span>
+<span class="sd">        array of (x,y) coordinates whose distribution, :math:`p(x,y)\propto I(x,y)` where :math:`I(x,y)` is the corresponding (normalised) pixel intensity at (x,y).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.exposure</span> <span class="k">import</span> <span class="n">rescale_intensity</span>
+
+    <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># create coordinates.</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">));</span> <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">ravel</span><span class="p">();</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="c1"># rescale image and set lower values to 0.</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">rescale_intensity</span><span class="p">(</span><span class="n">img</span><span class="o">/</span><span class="mf">255.</span><span class="p">)</span>
+    <span class="n">im</span><span class="p">[</span><span class="n">im</span><span class="o">&lt;=</span><span class="n">thresh</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="c1"># sample the coordinates.</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="p">(</span><span class="n">samples</span><span class="o">*</span><span class="n">im</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    
+    <span class="n">x_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">im</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">im</span><span class="p">))])</span>
+    <span class="n">y_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">im</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">[</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">im</span><span class="p">))])</span>
+    <span class="n">xy_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">x_samples</span><span class="p">,</span> <span class="n">y_samples</span><span class="p">])</span><span class="o">.</span><span class="n">T</span> 
+
+    <span class="k">return</span> <span class="n">xy_samples</span></div>
+        
+<div class="viewcode-block" id="fit_2dGMM"><a class="viewcode-back" href="../distancing.html#distancing.fit_2dGMM">[docs]</a><span class="k">def</span> <span class="nf">fit_2dGMM</span><span class="p">(</span><span class="n">signature_x</span><span class="p">,</span> <span class="n">signature_y</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    
+    <span class="kn">from</span> <span class="nn">sklearn.mixture</span> <span class="k">import</span> <span class="n">GaussianMixture</span>
+    
+    <span class="n">signature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">signature_x</span><span class="p">,</span> <span class="n">signature_y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+    
+    <span class="n">gmm</span> <span class="o">=</span> <span class="n">GaussianMixture</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">component</span><span class="p">)</span>
+    <span class="n">gmm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span>
+    
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">weights_</span>
+    <span class="n">means_</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">means_</span> 
+    <span class="n">covars_</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">covariances_</span>
+
+    <span class="n">fitted_y</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">means_</span><span class="p">,</span> <span class="n">covars_</span><span class="p">),</span> <span class="n">fitted_y</span><span class="p">,</span> <span class="n">gmm</span></div>
+
+<div class="viewcode-block" id="fitGMM_patch_post_process"><a class="viewcode-back" href="../distancing.html#distancing.fitGMM_patch_post_process">[docs]</a><span class="k">def</span> <span class="nf">fitGMM_patch_post_process</span><span class="p">(</span> <span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">max_dist_thresh</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    
+    <span class="n">thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">)</span>
+
+    <span class="c1"># attempt to do this on the full posterior graph. </span>
+    <span class="n">xy_samples</span> <span class="o">=</span> <span class="n">img2histogram_samples</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">xy_samples</span><span class="o">&gt;=</span><span class="n">thresh</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;not enough points recalibrating thresholds&#39;</span> 
+        <span class="n">thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">)</span>
+        <span class="n">xy_samples</span> <span class="o">=</span> <span class="n">img2histogram_samples</span><span class="p">(</span><span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
+    
+<span class="c1">#    print np.sum(np.isnan(xy_samples))</span>
+    <span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">means_</span><span class="p">,</span> <span class="n">covars_</span><span class="p">),</span> <span class="n">fitted_y</span><span class="p">,</span> <span class="n">gmm</span> <span class="o">=</span> <span class="n">fit_2dGMM</span><span class="p">(</span><span class="n">xy_samples</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy_samples</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">component</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="n">coords1</span> <span class="o">=</span> <span class="n">means_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">coords2</span> <span class="o">=</span> <span class="n">means_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">cand_pair_peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">coords1</span><span class="p">,</span> <span class="n">coords2</span><span class="p">]);</span> <span class="n">cand_pair_peaks</span> <span class="o">=</span> <span class="n">cand_pair_peaks</span><span class="p">[:,[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">cand_pair_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cand_pair_peaks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cand_pair_peaks</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    
+    <span class="n">filt_peaks_backup</span> <span class="o">=</span> <span class="n">cand_pair_dist</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">cand_pair_dist</span> <span class="o">&lt;=</span> <span class="n">max_dist_thresh</span><span class="p">:</span>
+        <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">cand_pair_peaks</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        
+<span class="c1">#        print &#39;refining&#39;</span>
+        <span class="c1"># filter for the component closest to the centre of the image. </span>
+        <span class="n">binary</span> <span class="o">=</span> <span class="n">centre_patch_intensity</span> <span class="o">&gt;=</span> <span class="n">thresh</span>
+        
+<span class="c1">#        plt.figure()</span>
+<span class="c1">#        plt.imshow(binary)</span>
+<span class="c1">#        plt.show()</span>
+        
+        <span class="n">binary_filt</span> <span class="o">=</span> <span class="n">filter_masks_centre</span><span class="p">(</span> <span class="n">binary</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+        
+<span class="c1">##        plt.figure()</span>
+<span class="c1">##        plt.imshow(binary)</span>
+<span class="c1">#        plt.figure()</span>
+<span class="c1">#        plt.imshow(binary_filt)</span>
+<span class="c1">#        plt.show()</span>
+        
+        <span class="n">centre_patch_intensity_new</span> <span class="o">=</span> <span class="n">binary_filt</span><span class="o">*</span><span class="n">centre_patch_intensity</span>
+        
+<span class="c1">#        plt.figure()</span>
+<span class="c1">#        plt.imshow(centre_patch_intensity_new)</span>
+<span class="c1">#        plt.show()</span>
+        
+        <span class="c1"># now do the detection </span>
+        <span class="n">xy_samples</span> <span class="o">=</span> <span class="n">img2histogram_samples</span><span class="p">(</span><span class="n">centre_patch_intensity_new</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">means_</span><span class="p">,</span> <span class="n">covars_</span><span class="p">),</span> <span class="n">fitted_y</span><span class="p">,</span> <span class="n">gmm</span> <span class="o">=</span> <span class="n">fit_2dGMM</span><span class="p">(</span><span class="n">xy_samples</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy_samples</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">component</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        
+        <span class="n">coords1</span> <span class="o">=</span> <span class="n">means_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">coords2</span> <span class="o">=</span> <span class="n">means_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+        <span class="n">cand_pair_peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">coords1</span><span class="p">,</span> <span class="n">coords2</span><span class="p">]);</span> <span class="n">cand_pair_peaks</span> <span class="o">=</span> <span class="n">cand_pair_peaks</span><span class="p">[:,[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">cand_pair_peaks</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filt_peaks</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">filt_peaks</span> <span class="o">=</span> <span class="n">filt_peaks_backup</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="n">filt_peaks</span></div>
+
+
+<div class="viewcode-block" id="filter_masks_centre"><a class="viewcode-back" href="../distancing.html#distancing.filter_masks_centre">[docs]</a><span class="k">def</span> <span class="nf">filter_masks_centre</span><span class="p">(</span> <span class="n">mask</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
+    
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
+    
+
+    <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+
+<span class="c1">#    plt.figure()</span>
+<span class="c1">#    plt.imshow(labelled)</span>
+<span class="c1">#    plt.show()</span>
+
+    <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="n">mask_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">nrows</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+<span class="c1">#    print uniq_reg</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniq_reg</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        
+<span class="c1">#        print area</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">area</span> <span class="o">&gt;</span> <span class="n">min_area</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">area</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mask</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+            
+    <span class="k">else</span><span class="p">:</span>
+    
+        <span class="n">reg</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
+        <span class="n">uniq_reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+        
+        <span class="n">areas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">centres</span> <span class="o">=</span> <span class="p">[]</span>
+    
+        <span class="k">for</span> <span class="n">re</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">:</span>
+            <span class="n">y</span><span class="p">,</span><span class="n">x</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">centroid</span>
+            <span class="n">areas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
+            <span class="n">centres</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">])</span>
+            
+        <span class="n">centres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centres</span><span class="p">)</span>
+        <span class="n">centre_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">centres</span> <span class="o">-</span> <span class="n">mask_centre</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        
+<span class="c1">#        print centre_dist</span>
+<span class="c1">#        print mask_centre</span>
+        <span class="c1"># first take the nearest. </span>
+
+        <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
+        <span class="n">min_dist</span> <span class="o">=</span> <span class="n">centre_dist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">centre_dist</span><span class="p">)]</span>
+                               
+        <span class="k">if</span> <span class="n">largest_reg</span> <span class="o">&lt;=</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="n">largest_reg</span> <span class="o">=</span> <span class="n">uniq_reg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">areas</span><span class="p">)]</span>
+            <span class="n">min_dist</span> <span class="o">=</span> <span class="n">centre_dist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">areas</span><span class="p">)]</span>
+                               
+        <span class="k">if</span> <span class="n">min_dist</span> <span class="o">&gt;=</span> <span class="n">nrows</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+<span class="c1">#        largest_reg = uniq_reg[np.argmax(areas)]</span>
+        <span class="k">else</span><span class="p">:</span>              
+            <span class="n">cand_mask</span> <span class="o">=</span> <span class="n">labelled</span> <span class="o">==</span> <span class="n">largest_reg</span>
+            
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_area</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_area</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cand_mask</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cand_mask</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="detect_2d_peaks"><a class="viewcode-back" href="../distancing.html#distancing.detect_2d_peaks">[docs]</a><span class="k">def</span> <span class="nf">detect_2d_peaks</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">I_img</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If filt: then we apply threshold otsu on the CNN image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">threshold_otsu</span>
+    
+    <span class="n">peaks</span> <span class="o">=</span> <span class="n">peak_local_max</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">)</span>
+    <span class="n">n_peaks_raw</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> 
+        
+        <span class="n">I_peak</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">peaks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># take the peak intesnty from the image. </span>
+        <span class="n">I_img_peak</span> <span class="o">=</span> <span class="n">I_img</span><span class="p">[</span><span class="n">peaks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span>
+        
+        <span class="k">if</span> <span class="n">filt</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">thresh</span> <span class="o">=</span> <span class="n">threshold_otsu</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="c1">#            thresh = 1e-6</span>
+            <span class="n">I_peak_out</span> <span class="o">=</span> <span class="n">I_img_peak</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
+            <span class="n">peaks</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">peaks</span><span class="p">,</span> <span class="n">I_peak_out</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">thresh</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span>
+            <span class="n">I_peak_out</span> <span class="o">=</span> <span class="n">I_img_peak</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
+            <span class="n">peaks</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">peaks</span><span class="p">,</span> <span class="n">I_peak_out</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">n_peaks_raw</span><span class="p">,</span> <span class="p">[]</span></div>
+
+
+
+<div class="viewcode-block" id="predict_centrioles_CNN_GMM"><a class="viewcode-back" href="../distancing.html#distancing.predict_centrioles_CNN_GMM">[docs]</a><span class="k">def</span> <span class="nf">predict_centrioles_CNN_GMM</span><span class="p">(</span><span class="n">imstack</span><span class="p">,</span> <span class="n">cnnstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+    
+    <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Post-filter results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imstack</span><span class="p">)):</span>
+        
+        <span class="n">zstack</span> <span class="o">=</span> <span class="n">imstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">cnnstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+    
+        <span class="c1"># 1. locate centriole peaks. (there might be none? depending on the quality of initial detection?)</span>
+        <span class="n">n_cnn_peaks_raw</span><span class="p">,</span> <span class="n">cnn_peaks</span> <span class="o">=</span> <span class="n">detect_2d_peaks</span><span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">zstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># 2. locate centres between the points. </span>
+            <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">peak_local_max</span><span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_peaks</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># only the highest peak. </span>
+    <span class="c1">#                cnn_centre = np.array([[test_zstack.shape[0]//2, test_zstack.shape[1]//2]]) </span>
+            
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            can this be improved? </span>
+<span class="sd">            &quot;&quot;&quot;</span>
+<span class="c1">#            print(len(cnn_peaks), len(cnn_centre))</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_centre</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]])</span>  <span class="c1"># defaults to mid point </span>
+            
+            <span class="c1"># 3. associate centres to filter centriole locations. # how many to associate? Different strategy. </span>
+            <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">associate_peaks2centre_single</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">,</span> <span class="n">cnn_centre</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="n">dist_thresh</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="n">ratio_thresh</span><span class="p">)</span>
+            
+            <span class="c1"># two cases: (if only one then lets run the GMM on the CNN.)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> 
+                
+<span class="c1">#                print &#39;single&#39;</span>
+                <span class="n">centre_patch_intensity</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># use the CNN map as the cleaned up ver. </span>
+    <span class="c1">#                    centre_patch_intensity = test_zstack.copy()</span>
+                <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">fitGMM_patch_post_process</span><span class="p">(</span> <span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">max_dist_thresh</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+                
+            <span class="n">peak_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># find the distance between the points. </span>
+            
+            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">cnn_peaks_filt</span><span class="p">,</span> <span class="n">peak_dist</span><span class="p">])</span>
+            
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            
+    <span class="k">return</span> <span class="n">distances</span></div>
+
+
+<div class="viewcode-block" id="predict_centrioles_CNN_GMM_single"><a class="viewcode-back" href="../distancing.html#distancing.predict_centrioles_CNN_GMM_single">[docs]</a><span class="k">def</span> <span class="nf">predict_centrioles_CNN_GMM_single</span><span class="p">(</span><span class="n">imstack</span><span class="p">,</span> <span class="n">cnnstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+    
+    <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Post-filter results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imstack</span><span class="p">)):</span>
+        
+        <span class="n">zstack</span> <span class="o">=</span> <span class="n">imstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">cnnstack</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+    
+        <span class="c1"># 1. locate centriole peaks. (there might be none? depending on the quality of initial detection?)</span>
+        <span class="n">n_cnn_peaks_raw</span><span class="p">,</span> <span class="n">cnn_peaks</span> <span class="o">=</span> <span class="n">detect_2d_peaks</span><span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">zstack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># 2. locate centres between the points. </span>
+<span class="c1">#            cnn_centre = peak_local_max(out[:,:,1], num_peaks=1) # only the highest peak. </span>
+            <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]])</span> 
+            
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            can this be improved? </span>
+<span class="sd">            &quot;&quot;&quot;</span>
+<span class="c1">#            print(len(cnn_peaks), len(cnn_centre))</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_centre</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cnn_centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">zstack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]])</span>  <span class="c1"># defaults to mid point </span>
+            
+            <span class="c1"># 3. associate centres to filter centriole locations. # how many to associate? Different strategy. </span>
+            <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">associate_peaks2centre_single</span><span class="p">(</span><span class="n">cnn_peaks</span><span class="p">,</span> <span class="n">cnn_centre</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="n">dist_thresh</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="n">ratio_thresh</span><span class="p">)</span>
+            
+            <span class="c1"># two cases: (if only one then lets run the GMM on the CNN.)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> 
+                
+<span class="c1">#                print &#39;single&#39;</span>
+                <span class="n">centre_patch_intensity</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># use the CNN map as the cleaned up ver. </span>
+    <span class="c1">#                    centre_patch_intensity = test_zstack.copy()</span>
+                <span class="n">cnn_peaks_filt</span> <span class="o">=</span> <span class="n">fitGMM_patch_post_process</span><span class="p">(</span> <span class="n">centre_patch_intensity</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">max_dist_thresh</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+                
+            <span class="n">peak_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">cnn_peaks_filt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># find the distance between the points. </span>
+            
+            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">cnn_peaks_filt</span><span class="p">,</span> <span class="n">peak_dist</span><span class="p">])</span>
+            
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            
+    <span class="k">return</span> <span class="n">distances</span></div>
+
+
+<div class="viewcode-block" id="annotations_to_dots_multi"><a class="viewcode-back" href="../distancing.html#distancing.annotations_to_dots_multi">[docs]</a><span class="k">def</span> <span class="nf">annotations_to_dots_multi</span><span class="p">(</span><span class="n">xstack</span><span class="p">,</span> <span class="n">ystack</span><span class="p">):</span>
+    
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
+    
+    <span class="n">cells</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">peaks</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ystack</span><span class="p">)):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">ystack</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span> <span class="n">n_channels</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">y_out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dists_out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">peaks_out</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">):</span>
+            <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">y</span><span class="p">[:,:,</span><span class="n">j</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">10</span><span class="p">)</span> <span class="c1"># threshold.</span>
+            <span class="n">n_regions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+            
+            <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n_regions</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="c1"># retrieve centroids of labelled regions. </span>
+                    <span class="n">cents</span> <span class="o">=</span> <span class="n">ret_centroids_regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># it should be 1 and we use local peaks to retrieve.</span>
+                    <span class="n">cents</span> <span class="o">=</span> <span class="n">ret_centroids_localpeaks</span><span class="p">(</span><span class="n">y</span><span class="o">&gt;</span><span class="mi">10</span><span class="p">)</span>
+                    
+                <span class="c1"># check if centroids == 2. </span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">new_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+                    <span class="n">cents</span> <span class="o">=</span> <span class="n">cents</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">cent</span> <span class="ow">in</span> <span class="n">cents</span><span class="p">:</span>
+                        <span class="n">new_y</span><span class="p">[</span><span class="n">cent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cent</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+                    
+                    <span class="n">y_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_y</span><span class="p">)</span>
+                    <span class="n">dists_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cents</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">2</span><span class="p">))</span>
+                    <span class="n">peaks_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cents</span><span class="p">[</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="k">elif</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># for other annotation channels. </span>
+                <span class="n">cents</span> <span class="o">=</span> <span class="n">ret_centroids_regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
+                <span class="n">new_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+                <span class="n">cents</span> <span class="o">=</span> <span class="n">cents</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">new_y</span><span class="p">[</span><span class="n">cents</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">cents</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="n">y_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_y</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_out</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_channels</span><span class="p">:</span>
+            <span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xstack</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">dots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">y_out</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">dists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">dists_out</span><span class="p">))</span>
+            <span class="n">peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peaks_out</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+            
+    <span class="n">peak_stack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">peaks</span><span class="p">])</span>
+    <span class="n">peak_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">))])</span>
+    
+<span class="c1">#    print(peak_stack.shape, len(peak_ids))</span>
+    <span class="n">peak_stack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">peak_ids</span><span class="p">[:,</span><span class="kc">None</span><span class="p">],</span> <span class="n">peak_stack</span><span class="p">])</span>
+           
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">cells</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">dots</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">dists</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">peak_stack</span></div>
+
+<div class="viewcode-block" id="fetch_CNN_peaks"><a class="viewcode-back" href="../distancing.html#distancing.fetch_CNN_peaks">[docs]</a><span class="k">def</span> <span class="nf">fetch_CNN_peaks</span><span class="p">(</span><span class="n">img_stack</span><span class="p">,</span> <span class="n">I_img_stack</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If filt: then we apply threshold otsu on the CNN image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">threshold_otsu</span>
+    
+    <span class="n">all_peaks</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># iterate through</span>
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">img_stack</span><span class="p">):</span>
+    
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">img_stack</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">peak_local_max</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> 
+            
+            <span class="n">I_peak</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">peaks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># take the peak intesnty from the image. </span>
+    <span class="c1">#        p_peak = I_img[peaks[:,0], peaks[:,1]]</span>
+            
+            <span class="k">if</span> <span class="n">filt</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+<span class="c1">#                thresh = threshold_otsu(img)</span>
+                <span class="n">thresh</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span>
+                <span class="n">I_peak_out</span> <span class="o">=</span> <span class="n">I_peak</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
+                <span class="n">peaks</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[</span><span class="n">I_peak</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span>
+    
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">all_peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span> <span class="n">ii</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">))[:,</span><span class="kc">None</span><span class="p">],</span> <span class="n">peaks</span><span class="p">,</span> <span class="n">I_peak_out</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]])</span> <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">all_peaks</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">all_peaks</span><span class="o">.</span><span class="n">append</span><span class="p">([[]])</span>
+            
+    <span class="k">return</span> <span class="n">all_peaks</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    
+    <span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">load_model</span>
+    <span class="kn">from</span> <span class="nn">skimage.exposure</span> <span class="k">import</span> <span class="n">rescale_intensity</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+    <span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="nn">spio</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span> 
+    
+    <span class="c1"># input training files. </span>
+<span class="c1">#==============================================================================</span>
+<span class="c1">#   Load the train-test_data</span>
+<span class="c1">#==============================================================================</span>
+    <span class="c1"># these contain the real distances too!. </span>
+    <span class="n">in_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Training_Testing_patches_sectioned-Early.mat&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Training_Testing_patches_sectioned-Mid.mat&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Training_Testing_patches_sectioned-Late.mat&#39;</span><span class="p">]</span>
+
+<span class="c1"># =============================================================================</span>
+<span class="c1">#   Load the CNN to test.</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1">#    cnn_spot_model_early = load_model(&#39;Single-S1_32x32_relu_all_sigma2_mse&#39;)</span>
+<span class="c1">#    cnn_spot_model_mid = load_model(&#39;Single-S1_32x32_relu_all_sigma2_mse&#39;)</span>
+<span class="c1">#    cnn_spot_model_late = load_model(&#39;Single-S1_32x32_relu_all_sigma2_mse&#39;)</span>
+    
+<span class="c1">#    cnn_model = load_model(&#39;/media/felix/Elements/Raff Lab/Centriole Distancing/Scripts/sectioned_models/model_patch_32x32_aug_sigma2_raff_RB_mse_early&#39;)</span>
+<span class="c1">#    cnn_spot_model_early = load_model(&#39;Multi-S1_32x32_relu_all_sigma2_mse&#39;)</span>
+<span class="c1">#    cnn_spot_model_mid = load_model(&#39;Multi-S1_32x32_relu_all_sigma2_mse&#39;)</span>
+<span class="c1">#    cnn_spot_model_late = load_model(&#39;Multi-S1_32x32_relu_all_sigma2_mse&#39;)</span>
+    
+<span class="c1">#    cnn_spot_model_early = load_model(&#39;Multi-S1_32x32_selu_all_sigma2_mse-2&#39;)</span>
+<span class="c1">#    cnn_spot_model_mid = load_model(&#39;Multi-S1_32x32_selu_all_sigma2_mse-2&#39;)</span>
+<span class="c1">#    cnn_spot_model_late = load_model(&#39;Multi-S1_32x32_selu_all_sigma2_mse-2&#39;)</span>
+    
+<span class="c1">#</span>
+<span class="c1">#    cnn_spot_model_early = load_model(&#39;Single-S1_32x32_selu_all_sigma2_mse&#39;)</span>
+<span class="c1">#    cnn_spot_model_mid = load_model(&#39;Single-S1_32x32_selu_all_sigma2_mse&#39;)s</span>
+<span class="c1">#    cnn_spot_model_late = load_model(&#39;Single-S1_32x32_selu_all_sigma2_mse&#39;)</span>
+    
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sep Models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="c1">#    cnn_spot_model_early = load_model(&#39;Single-S1_32x32_relu_all_sigma2_mse-Early-notestaug&#39;)</span>
+<span class="c1">#    cnn_spot_model_mid = load_model(&#39;Single-S1_32x32_relu_all_sigma2_mse-Mid-notestaug&#39;)</span>
+<span class="c1">#    cnn_spot_model_late = load_model(&#39;Single-S1_32x32_relu_all_sigma2_mse-Late-notestaug&#39;)</span>
+    
+<span class="c1">#    cnn_spot_model_early = load_model(&#39;Single-S1_32x32_selu_all_sigma2_mse-Early-notestaug&#39;)</span>
+<span class="c1">#    cnn_spot_model_mid = load_model(&#39;Single-S1_32x32_selu_all_sigma2_mse-Mid-notestaug&#39;)</span>
+<span class="c1">#    cnn_spot_model_late = load_model(&#39;Single-S1_32x32_selu_all_sigma2_mse-Late-notestaug&#39;)</span>
+    
+<span class="c1">#    cnn_spot_model_early = load_model(&#39;Multi-S2_32x32_selu_all_sigma2_mse-Early-notestaug&#39;)</span>
+<span class="c1">#    cnn_spot_model_mid = load_model(&#39;Multi-S2_32x32_selu_all_sigma2_mse-Mid-notestaug&#39;)</span>
+<span class="c1">#    cnn_spot_model_late = load_model(&#39;Multi-S2_32x32_selu_all_sigma2_mse-Late-notestaug&#39;)</span>
+    
+    <span class="n">cnn_spot_model_early</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="s1">&#39;Multi-S1_32x32_selu_-attn-all_sigma2_mse-Early-notestaug&#39;</span><span class="p">)</span>
+    <span class="n">cnn_spot_model_mid</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="s1">&#39;Multi-S1_32x32_selu_-attn-all_sigma2_mse-Mid-notestaug&#39;</span><span class="p">)</span>
+    <span class="n">cnn_spot_model_late</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="s1">&#39;Multi-S1_32x32_selu_-attn-all_sigma2_mse-Late-notestaug&#39;</span><span class="p">)</span>
+    
+<span class="c1"># =============================================================================</span>
+<span class="c1">#   Load all the data to test.</span>
+<span class="c1"># =============================================================================</span>
+    <span class="n">setting</span> <span class="o">=</span> <span class="s1">&#39;train&#39;</span>
+    <span class="n">early_test</span> <span class="o">=</span> <span class="n">spio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">in_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="s1">&#39;X_test&#39;</span><span class="p">]</span>
+    <span class="n">early_test_GT</span> <span class="o">=</span> <span class="n">spio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">in_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="s1">&#39;Y_test&#39;</span><span class="p">]</span>
+    
+    <span class="n">mid_test</span> <span class="o">=</span> <span class="n">spio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">in_files</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="s1">&#39;X_test&#39;</span><span class="p">]</span>
+    <span class="n">mid_test_GT</span> <span class="o">=</span> <span class="n">spio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">in_files</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="s1">&#39;Y_test&#39;</span><span class="p">]</span>
+    
+    <span class="n">late_test</span> <span class="o">=</span> <span class="n">spio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">in_files</span><span class="p">[</span><span class="mi">2</span><span class="p">])[</span><span class="s1">&#39;X_test&#39;</span><span class="p">]</span>
+    <span class="n">late_test_GT</span> <span class="o">=</span> <span class="n">spio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">in_files</span><span class="p">[</span><span class="mi">2</span><span class="p">])[</span><span class="s1">&#39;Y_test&#39;</span><span class="p">]</span>
+    
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get GT measures including the positions of peaks. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X_early</span><span class="p">,</span> <span class="n">Y_early</span><span class="p">,</span> <span class="n">dist_early</span><span class="p">,</span> <span class="n">Peaks_early</span><span class="p">,</span> <span class="n">Peaks_early_stack</span> <span class="o">=</span> <span class="n">annotations_to_dots_multi</span><span class="p">(</span><span class="n">early_test</span><span class="p">,</span> <span class="n">early_test_GT</span><span class="p">)</span>
+    <span class="n">X_mid</span><span class="p">,</span> <span class="n">Y_mid</span><span class="p">,</span> <span class="n">dist_mid</span><span class="p">,</span> <span class="n">Peaks_mid</span><span class="p">,</span> <span class="n">Peaks_mid_stack</span> <span class="o">=</span> <span class="n">annotations_to_dots_multi</span><span class="p">(</span><span class="n">mid_test</span><span class="p">,</span> <span class="n">mid_test_GT</span><span class="p">)</span>
+    <span class="n">X_late</span><span class="p">,</span> <span class="n">Y_late</span><span class="p">,</span> <span class="n">dist_late</span><span class="p">,</span> <span class="n">Peaks_late</span><span class="p">,</span> <span class="n">Peaks_late_stack</span> <span class="o">=</span> <span class="n">annotations_to_dots_multi</span><span class="p">(</span><span class="n">late_test</span><span class="p">,</span> <span class="n">late_test_GT</span><span class="p">)</span>
+    
+    
+<span class="c1">#    plt.figure()</span>
+<span class="c1">#    plt.imshow(X_early[0])</span>
+<span class="c1">#    plt.plot(Peaks_early[0][:,0], Peaks_early[0][:,1], &#39;.&#39;)</span>
+<span class="c1">#    plt.show()</span>
+    
+<span class="c1"># =============================================================================</span>
+<span class="c1">#   Predict the CNN maps</span>
+<span class="c1"># =============================================================================</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Predict with CNN </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X_early</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X_early</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">X_mid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X_mid</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">X_late</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X_late</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">CNN_early_test</span> <span class="o">=</span> <span class="n">cnn_spot_model_early</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_early</span><span class="p">[:,:,:,</span><span class="kc">None</span><span class="p">]</span><span class="o">/</span><span class="mf">255.</span><span class="p">)</span><span class="o">/</span> <span class="mf">1000.</span>
+    <span class="n">CNN_mid_test</span> <span class="o">=</span> <span class="n">cnn_spot_model_mid</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_mid</span><span class="p">[:,:,:,</span><span class="kc">None</span><span class="p">]</span><span class="o">/</span><span class="mf">255.</span><span class="p">)</span><span class="o">/</span> <span class="mf">1000.</span>
+    <span class="n">CNN_late_test</span> <span class="o">=</span> <span class="n">cnn_spot_model_late</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_late</span><span class="p">[:,:,:,</span><span class="kc">None</span><span class="p">]</span><span class="o">/</span><span class="mf">255.</span><span class="p">)</span><span class="o">/</span> <span class="mf">1000.</span>
+
+    
+<span class="c1">## =============================================================================</span>
+<span class="c1">##   Test directly the quality of Peak (mAP) of the centrioles detected vs the manual positions.  </span>
+<span class="c1">## =============================================================================</span>
+    
+    <span class="c1"># check the quality of the detected peaks. # bypass the other stages? </span>
+    <span class="n">CNN_early_peaks</span> <span class="o">=</span> <span class="n">fetch_CNN_peaks</span><span class="p">(</span><span class="n">CNN_early_test</span><span class="p">[:,:,:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">X_early</span><span class="o">/</span><span class="mf">255.</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">CNN_mid_peaks</span> <span class="o">=</span> <span class="n">fetch_CNN_peaks</span><span class="p">(</span><span class="n">CNN_mid_test</span><span class="p">[:,:,:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">X_mid</span><span class="o">/</span><span class="mf">255.</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">CNN_late_peaks</span> <span class="o">=</span> <span class="n">fetch_CNN_peaks</span><span class="p">(</span><span class="n">CNN_late_test</span><span class="p">[:,:,:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">X_late</span><span class="o">/</span><span class="mf">255.</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">all_CNN_peaks_early</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">CNN_early_peaks</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">all_CNN_peaks_mid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">CNN_mid_peaks</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">all_CNN_peaks_late</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">CNN_late_peaks</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+    
+    
+    <span class="n">mAP_early</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_AP</span><span class="p">(</span><span class="n">Peaks_early_stack</span><span class="p">,</span> <span class="n">all_CNN_peaks_early</span><span class="p">,</span> <span class="n">dist_threshold</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">mAP_mid</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_AP</span><span class="p">(</span><span class="n">Peaks_mid_stack</span><span class="p">,</span> <span class="n">all_CNN_peaks_mid</span><span class="p">,</span> <span class="n">dist_threshold</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">mAP_late</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_AP</span><span class="p">(</span><span class="n">Peaks_late_stack</span><span class="p">,</span> <span class="n">all_CNN_peaks_late</span><span class="p">,</span> <span class="n">dist_threshold</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="n">mAP_early</span><span class="p">,</span> <span class="n">mAP_mid</span><span class="p">,</span> <span class="n">mAP_late</span><span class="p">)</span>
+    
+    <span class="n">all_CNN_peaks_mid</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_CNN_peaks_mid</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">all_CNN_peaks_early</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">all_CNN_peaks_late</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_CNN_peaks_late</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">all_CNN_peaks_mid</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">all_CNN_peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">all_CNN_peaks_early</span><span class="p">,</span> <span class="n">all_CNN_peaks_mid</span><span class="p">,</span> <span class="n">all_CNN_peaks_late</span><span class="p">])</span>
+    
+
+    <span class="n">Peaks_mid_stack</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Peaks_mid_stack</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">Peaks_early_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> 
+    <span class="n">Peaks_late_stack</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Peaks_late_stack</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">Peaks_mid_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">all_GT_peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">Peaks_early_stack</span><span class="p">,</span> <span class="n">Peaks_mid_stack</span><span class="p">,</span> <span class="n">Peaks_late_stack</span><span class="p">])</span>
+    
+    <span class="n">mAP</span><span class="p">,</span>  <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="o">=</span> <span class="n">compute_AP</span><span class="p">(</span><span class="n">all_GT_peaks</span><span class="p">,</span> <span class="n">all_CNN_peaks</span><span class="p">,</span> <span class="n">dist_threshold</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="n">mAP</span><span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">recall</span><span class="p">,</span> <span class="n">precision</span><span class="p">,</span> <span class="s1">&#39;ko-&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+    <span class="c1"># compute the mAP. </span>
+
+<span class="c1">#    plt.figure()</span>
+<span class="c1">#    plt.imshow(CNN_early_test[0,:,:,0])</span>
+<span class="c1">#    plt.plot(CNN_early_peaks[0][:,2], CNN_early_peaks[0][:,1], &#39;ro&#39;)</span>
+<span class="c1">#    plt.plot(Peaks_early[0][:,1], Peaks_early[0][:,0], &#39;go&#39;)</span>
+<span class="c1">#    plt.show()</span>
+<span class="c1">#    </span>
+<span class="c1"># =============================================================================</span>
+<span class="c1">#   Eval the distance discrepancy and Correlation</span>
+<span class="c1"># =============================================================================</span>
+    
+    <span class="n">n_bootstraps</span> <span class="o">=</span> <span class="mi">10</span>
+    
+<span class="c1">#    CNN_early_test_dists = predict_centrioles_CNN_GMM(X_early/255., CNN_early_test, min_distance=1, filt=True, dist_thresh=15, ratio_thresh=4)</span>
+<span class="c1">#    CNN_mid_test_dists = predict_centrioles_CNN_GMM(X_mid/255., CNN_mid_test, min_distance=1, filt=True, dist_thresh=15, ratio_thresh=4)</span>
+<span class="c1">#    CNN_late_test_dists = predict_centrioles_CNN_GMM(X_late/255., CNN_late_test, min_distance=1, filt=True, dist_thresh=15, ratio_thresh=4)</span>
+<span class="c1">#    </span>
+    
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;evaluating MAD&#39;</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">pearsonr</span><span class="p">,</span> <span class="n">spearmanr</span>
+    
+    <span class="n">means_Early</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">means_Mid</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">means_Late</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">means_all</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstraps</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get distancing information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+<span class="c1">#        CNN_early_test_dists = predict_centrioles_CNN_GMM_single(X_early/255., CNN_early_test, min_distance=1, filt=True, dist_thresh=15, ratio_thresh=4)</span>
+<span class="c1">#        CNN_mid_test_dists = predict_centrioles_CNN_GMM_single(X_mid/255., CNN_mid_test, min_distance=1, filt=True, dist_thresh=15, ratio_thresh=4)</span>
+<span class="c1">#        CNN_late_test_dists = predict_centrioles_CNN_GMM_single(X_late/255., CNN_late_test, min_distance=1, filt=True, dist_thresh=15, ratio_thresh=4)</span>
+        
+        <span class="n">CNN_early_test_dists</span> <span class="o">=</span> <span class="n">predict_centrioles_CNN_GMM</span><span class="p">(</span><span class="n">X_early</span><span class="o">/</span><span class="mf">255.</span><span class="p">,</span> <span class="n">CNN_early_test</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">CNN_mid_test_dists</span> <span class="o">=</span> <span class="n">predict_centrioles_CNN_GMM</span><span class="p">(</span><span class="n">X_mid</span><span class="o">/</span><span class="mf">255.</span><span class="p">,</span> <span class="n">CNN_mid_test</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">CNN_late_test_dists</span> <span class="o">=</span> <span class="n">predict_centrioles_CNN_GMM</span><span class="p">(</span><span class="n">X_late</span><span class="o">/</span><span class="mf">255.</span><span class="p">,</span> <span class="n">CNN_late_test</span><span class="p">,</span> <span class="n">min_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ratio_thresh</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        
+        
+        <span class="n">CNN_early_dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">CNN_early_test_dists</span><span class="p">])</span>
+        <span class="n">CNN_mid_dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">CNN_mid_test_dists</span><span class="p">])</span>
+        <span class="n">CNN_late_dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">CNN_late_test_dists</span><span class="p">])</span>
+        
+        <span class="n">all_CNN_dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">CNN_early_dists</span><span class="p">,</span> <span class="n">CNN_mid_dists</span><span class="p">,</span> <span class="n">CNN_late_dists</span><span class="p">])</span>
+        <span class="n">all_man_dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">dist_early</span><span class="p">,</span> <span class="n">dist_mid</span><span class="p">,</span> <span class="n">dist_late</span><span class="p">])</span>
+        
+        <span class="n">means_Early</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">CNN_early_dists</span><span class="o">-</span><span class="n">dist_early</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">CNN_early_dists</span><span class="o">-</span><span class="n">dist_early</span><span class="p">))])</span>
+        <span class="n">means_Mid</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">CNN_mid_dists</span><span class="o">-</span><span class="n">dist_mid</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">CNN_mid_dists</span><span class="o">-</span><span class="n">dist_mid</span><span class="p">))])</span>
+        <span class="n">means_Late</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">CNN_late_dists</span><span class="o">-</span><span class="n">dist_late</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">CNN_late_dists</span><span class="o">-</span><span class="n">dist_late</span><span class="p">))])</span>
+        <span class="n">means_all</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">all_CNN_dists</span><span class="o">-</span><span class="n">all_man_dists</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">all_CNN_dists</span><span class="o">-</span><span class="n">all_man_dists</span><span class="p">)),</span> <span class="n">pearsonr</span><span class="p">(</span><span class="n">all_man_dists</span><span class="p">,</span> <span class="n">all_CNN_dists</span><span class="p">)[</span><span class="mi">0</span><span class="p">]])</span>
+        
+    <span class="nb">print</span><span class="p">(</span><span class="n">means_Early</span><span class="p">)</span>
+    <span class="n">means_Early</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">means_Early</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">means_Mid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">means_Mid</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">means_Late</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">means_Late</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">means_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">means_all</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Early:&#39;</span><span class="p">,</span> <span class="n">means_Early</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Mid:&#39;</span><span class="p">,</span> <span class="n">means_Mid</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Late:&#39;</span><span class="p">,</span> <span class="n">means_Late</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Overall:&#39;</span><span class="p">,</span> <span class="n">means_all</span><span class="p">)</span>
+    
+<span class="c1">#    print(&#39;Early:&#39;, np.mean(np.abs(CNN_early_dists-dist_early)), np.std(np.abs(CNN_early_dists-dist_early)))</span>
+<span class="c1">#    print(&#39;Mid:&#39;, np.mean(np.abs(CNN_mid_dists-dist_mid)), np.std(np.abs(CNN_mid_dists-dist_mid)))</span>
+<span class="c1">#    print(&#39;Late:&#39;, np.mean(np.abs(CNN_late_dists-dist_late)), np.std(np.abs(CNN_late_dists-dist_late)))</span>
+<span class="c1">#    print(&#39;Overall:&#39;, np.mean(np.abs(all_CNN_dists-all_man_dists)), np.std(np.abs(all_CNN_dists-all_man_dists)))</span>
+    
+    
+<span class="c1">##    print(&#39;Mean Early Man:&#39;, np.mean( dist_early))</span>
+<span class="c1">##    print(&#39;Mean Mid Man:&#39;, np.mean(dist_mid))</span>
+<span class="c1">##    print(&#39;Mean Late Man:&#39;, np.mean(dist_late))</span>
+<span class="c1">#    </span>
+<span class="c1">#    from scipy.stats import pearsonr, spearmanr</span>
+<span class="c1">#    print(&#39;Pearson r:&#39;, pearsonr(all_man_dists, all_CNN_dists))</span>
+<span class="c1">#    print(&#39;Spearman r:&#39;, spearmanr(all_man_dists, all_CNN_dists))</span>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Felix Y. Zhou
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.1',
+              LANGUAGE:'en',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: ''
+          };
+      </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,882 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>training &mdash; Centriole Distancing 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Centriole Distancing
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../file_io.html">File Operations module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../image_fn.html">Image Functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../distancing.html">Distancing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Centriole Distancing</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>training</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for training</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python2</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains functions to aid in parsing of manual dot annotations for centriole distancing and functions to prepare the data for CNN training.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="elastic_transform"><a class="viewcode-back" href="../training.html#training.elastic_transform">[docs]</a><span class="k">def</span> <span class="nf">elastic_transform</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">alpha_affine</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">borderMode</span><span class="o">=</span><span class="s1">&#39;reflect&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Artificially augment the # of training images by elastic image transformations</span>
+
+<span class="sd">    Based on https://gist.github.com/erniejunior/601cdf56d2b424757de5</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : numpy array</span>
+<span class="sd">        input image, gray or RGB:</span>
+<span class="sd">            (n_rows x n_cols): gray image</span>
+<span class="sd">            (n_rows x n_cols x 3): RGB image</span>
+<span class="sd">    alpha : float</span>
+<span class="sd">        strength of deformation.</span>
+<span class="sd">    sigma : float</span>
+<span class="sd">        size of Gaussian filter for anti-aliasing. </span>
+<span class="sd">    sigma_affine : float</span>
+<span class="sd">        size of the random local deformations </span>
+<span class="sd">    random_state : None or int</span>
+<span class="sd">        integer seed for the random number generator, default: None</span>
+<span class="sd">    borderMode :</span>
+<span class="sd">        the border method used when extrapolating as given by cv2.warpAffine</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : numpy array</span>
+<span class="sd">        the warped image of the same resolution.</span>
+<span class="sd">            (n_rows x n_cols): a gray-image.</span>
+<span class="sd">            (n_rows x n_cols x 3): an RGB-image. </span>
+<span class="sd">            (n_rows x n_cols x 4): an RGBA-image.</span>
+<span class="sd">        </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [Simard2003] Simard, Steinkraus and Platt, &quot;Best Practices for</span>
+<span class="sd">         Convolutional Neural Networks applied to Visual Document Analysis&quot;, in</span>
+<span class="sd">         Proc. of the International Conference on Document Analysis and</span>
+<span class="sd">         Recognition, 2003.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">cv2</span>
+    <span class="kn">from</span> <span class="nn">scipy.ndimage.interpolation</span> <span class="k">import</span> <span class="n">map_coordinates</span>
+    <span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="k">import</span> <span class="n">gaussian_filter</span>
+    
+    <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">shape_size</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    
+    <span class="c1"># Random affine</span>
+    <span class="n">center_square</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">shape_size</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">square_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">shape_size</span><span class="p">)</span> <span class="o">//</span> <span class="mi">3</span>
+    <span class="n">pts1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([</span><span class="n">center_square</span> <span class="o">+</span> <span class="n">square_size</span><span class="p">,</span> <span class="p">[</span><span class="n">center_square</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">square_size</span><span class="p">,</span> <span class="n">center_square</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">square_size</span><span class="p">],</span> <span class="n">center_square</span> <span class="o">-</span> <span class="n">square_size</span><span class="p">])</span>
+    <span class="n">pts2</span> <span class="o">=</span> <span class="n">pts1</span> <span class="o">+</span> <span class="n">random_state</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">alpha_affine</span><span class="p">,</span> <span class="n">alpha_affine</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">pts1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getAffineTransform</span><span class="p">(</span><span class="n">pts1</span><span class="p">,</span> <span class="n">pts2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">borderMode</span> <span class="o">==</span> <span class="s1">&#39;reflect&#39;</span><span class="p">:</span>
+        <span class="n">borderMode</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">BORDER_REFLECT_101</span>
+
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpAffine</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">shape_size</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">borderMode</span><span class="o">=</span><span class="n">borderMode</span><span class="p">)</span>
+
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">((</span><span class="n">random_state</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">((</span><span class="n">random_state</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha</span>
+    <span class="n">dz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">y</span><span class="o">+</span><span class="n">dy</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">dx</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">map_coordinates</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;reflect&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="apply_elastic_transform"><a class="viewcode-back" href="../training.html#training.apply_elastic_transform">[docs]</a><span class="k">def</span> <span class="nf">apply_elastic_transform</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function wraps the elastic transform to apply it to a batch of images. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    imgs : numpy array</span>
+<span class="sd">        array of input gray or RGB images:</span>
+<span class="sd">            (n_imgs x n_rows x n_cols): gray image.</span>
+<span class="sd">            (n_imgs x n_rows x n_cols x 3): RGB image.</span>
+<span class="sd">    labels : numpy array</span>
+<span class="sd">        array of corresponding annotation images for n different tasks, as represented by the number of image channels.</span>
+<span class="sd">            (n_imgs x n_rows x n_cols x n_tasks): for n_tasks.</span>
+<span class="sd">    strength : float</span>
+<span class="sd">        the strength of the stretching in the elastic transform, see :meth:`elastic_transform` </span>
+<span class="sd">    N : int</span>
+<span class="sd">        number of random deformations. </span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    aug_imgs : numpy array</span>
+<span class="sd">        augmented image dataset, expanded N times. </span>
+<span class="sd">    aug_labels : numpy array</span>
+<span class="sd">        corresponding annotation image dataset, expanded N times. </span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [Simard2003] Simard, Steinkraus and Platt, &quot;Best Practices for</span>
+<span class="sd">         Convolutional Neural Networks applied to Visual Document Analysis&quot;, in</span>
+<span class="sd">         Proc. of the International Conference on Document Analysis and</span>
+<span class="sd">         Recognition, 2003.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">aug_imgs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">aug_labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n_imgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>    
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_imgs</span><span class="p">):</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">imgs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">lab</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">im_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">im</span><span class="p">,</span> <span class="n">lab</span><span class="p">])</span>
+        
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">im_out</span> <span class="o">=</span> <span class="n">elastic_transform</span><span class="p">(</span><span class="n">im_</span><span class="p">,</span> <span class="n">im_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">im_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">strength</span><span class="p">,</span> <span class="n">im_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">strength</span><span class="p">)</span>
+            <span class="n">aug_imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">im_out</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">aug_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">im_out</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
+            
+    <span class="n">aug_imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">aug_imgs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">aug_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">aug_labels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">aug_imgs</span><span class="p">,</span> <span class="n">aug_labels</span></div>
+        
+    
+<div class="viewcode-block" id="random_intensity"><a class="viewcode-back" href="../training.html#training.random_intensity">[docs]</a><span class="k">def</span> <span class="nf">random_intensity</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Randomly adjust the image intensity using a gamma transform </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy array</span>
+<span class="sd">        input gray or RGB images with intensity in [0,1]:</span>
+<span class="sd">            (n_imgs x n_cols): gray image.</span>
+<span class="sd">            (n_imgs x n_cols x 3): RGB image.</span>
+<span class="sd">    shift : float</span>
+<span class="sd">        the adjustment range of intensity. The intensity change is additively applied and is uniformly sampled from [-shift, shift]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    im : numpy array</span>
+<span class="sd">        output image of same size as input image with intensity in [0,1]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="c1"># add random constant changes to brightness</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">img</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">shift</span><span class="p">,</span> <span class="n">shift</span><span class="p">)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">im</span></div>
+    
+    
+<div class="viewcode-block" id="add_noise"><a class="viewcode-back" href="../training.html#training.add_noise">[docs]</a><span class="k">def</span> <span class="nf">add_noise</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Randomly add zero-mean Gaussian noise to the image + a random constant intensity change across the whole image. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy array</span>
+<span class="sd">        input gray or RGB images with intensity in [0,1]:</span>
+<span class="sd">            (n_imgs x n_cols): gray image.</span>
+<span class="sd">            (n_imgs x n_cols x 3): RGB image.</span>
+<span class="sd">    shift : float</span>
+<span class="sd">        the adjustment range of the constant intensity. The applied constant is uniformly sampled from [-shift, shift]</span>
+<span class="sd">    sigma : float</span>
+<span class="sd">        width of Gaussian, defines the noise level. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    im : numpy array</span>
+<span class="sd">        output image of same size as input image with intensity in [0,1]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="c1"># add zero mean Gaussian Noise. </span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">random_intensity</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">shift</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span> <span class="c1"># also offset the intensity values a bit too. </span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># check intensities are valid </span>
+    
+    <span class="k">return</span> <span class="n">im</span> </div>
+
+<div class="viewcode-block" id="add_gamma"><a class="viewcode-back" href="../training.html#training.add_gamma">[docs]</a><span class="k">def</span> <span class="nf">add_gamma</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.3</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Randomly adjust the image intensity using a gamma transform </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy array</span>
+<span class="sd">        input gray or RGB images with intensity in [0,1]:</span>
+<span class="sd">            (n_imgs x n_cols): gray image.</span>
+<span class="sd">            (n_imgs x n_cols x 3): RGB image.</span>
+<span class="sd">    gamma : numpy array</span>
+<span class="sd">        the adjustment range of gamma intensity. The applied gamma is uniformly sampled from [1-gamma, 1+gamma]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    im : numpy array</span>
+<span class="sd">        output image of same size as input image with intensity in [0,1]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.exposure</span> <span class="k">import</span> <span class="n">adjust_gamma</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">gamma</span><span class="p">,</span><span class="mi">1</span><span class="o">+</span><span class="n">gamma</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># uniform sampling to get more diversity </span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">adjust_gamma</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="n">noise</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># clip to normalised intensities. </span>
+    
+    <span class="k">return</span> <span class="n">im</span> </div>
+    
+    
+<div class="viewcode-block" id="apply_elastic_transform_intensity"><a class="viewcode-back" href="../training.html#training.apply_elastic_transform_intensity">[docs]</a><span class="k">def</span> <span class="nf">apply_elastic_transform_intensity</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">sigma_max</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function wraps the elastic transform as well as adding random noise and gamma adjustment to augment a batch of images. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    imgs : numpy array</span>
+<span class="sd">        array of input gray or RGB images:</span>
+<span class="sd">            (n_imgs x n_cols): gray image.</span>
+<span class="sd">            (n_imgs x n_cols x 3): RGB image.</span>
+<span class="sd">    labels : numpy array</span>
+<span class="sd">        array of corresponding annotation images for n different tasks, as represented by the number of image channels.</span>
+<span class="sd">            (n_imgs x n_cols x n_tasks): for n_tasks.</span>
+<span class="sd">    strength : float</span>
+<span class="sd">        the strength of the stretching in the elastic transform, see :meth:`elastic_transform` </span>
+<span class="sd">    shift : float</span>
+<span class="sd">        the maximum shift in pixel intensity in addition to addition of Gaussian noise. </span>
+<span class="sd">    sigma_max : float</span>
+<span class="sd">        defines the maximum standard deviation of the Gaussian noise corruption. The noise level added is a uniform variable on the range [0, sigma_max]</span>
+<span class="sd">    N : int</span>
+<span class="sd">        number of random deformations. </span>
+<span class="sd">    random_state : int or None</span>
+<span class="sd">        optionally set a random seed for the random generation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    aug_imgs : numpy array</span>
+<span class="sd">        augmented image dataset, expanded N times. </span>
+<span class="sd">    aug_labels : numpy array</span>
+<span class="sd">        corresponding annotation image dataset, expanded N times. </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.exposure</span> <span class="k">import</span> <span class="n">rescale_intensity</span>
+    <span class="n">aug_imgs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">aug_labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n_imgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>    
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_imgs</span><span class="p">):</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">rescale_intensity</span><span class="p">(</span><span class="n">imgs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">lab</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">im_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">im</span><span class="p">,</span> <span class="n">lab</span><span class="p">])</span> 
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lab</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">n_label_channels</span> <span class="o">=</span> <span class="n">lab</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lab</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">n_label_channels</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">n_img_channels</span> <span class="o">=</span> <span class="n">im_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">n_label_channels</span>
+        
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">im_out</span> <span class="o">=</span> <span class="n">elastic_transform</span><span class="p">(</span><span class="n">im_</span><span class="p">,</span> <span class="n">im_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">strength</span><span class="p">,</span> <span class="n">im_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">strength</span><span class="p">,</span> <span class="n">im_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">strength</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+
+            <span class="n">aug_imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">im_out</span><span class="p">[:,:,:</span><span class="n">n_img_channels</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span> <span class="c1"># no noise</span>
+            <span class="n">aug_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">im_out</span><span class="p">[:,:,</span><span class="n">n_img_channels</span><span class="p">:</span><span class="n">n_img_channels</span><span class="o">+</span><span class="n">n_label_channels</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>  <span class="c1"># with noise.             </span>
+            
+            <span class="n">aug_imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_noise</span><span class="p">(</span><span class="n">im_out</span><span class="p">[:,:,:</span><span class="n">n_img_channels</span><span class="p">],</span> <span class="n">shift</span><span class="o">=</span><span class="n">shift</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sigma_max</span><span class="p">,</span><span class="mi">1</span><span class="p">))[</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">aug_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">im_out</span><span class="p">[:,:,</span><span class="n">n_img_channels</span><span class="p">:</span><span class="n">n_img_channels</span><span class="o">+</span><span class="n">n_label_channels</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span> 
+
+            <span class="n">aug_imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_gamma</span><span class="p">(</span><span class="n">im_out</span><span class="p">[:,:,:</span><span class="n">n_img_channels</span><span class="p">],</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:])</span> <span class="c1"># random gamma enhancement. </span>
+            <span class="n">aug_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">im_out</span><span class="p">[:,:,</span><span class="n">n_img_channels</span><span class="p">:</span><span class="n">n_img_channels</span><span class="o">+</span><span class="n">n_label_channels</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
+
+    <span class="n">aug_imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">aug_imgs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">aug_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">aug_labels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">aug_imgs</span><span class="p">,</span> <span class="n">aug_labels</span></div>
+    
+
+<div class="viewcode-block" id="apply_gaussian_to_dots"><a class="viewcode-back" href="../training.html#training.apply_gaussian_to_dots">[docs]</a><span class="k">def</span> <span class="nf">apply_gaussian_to_dots</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">min_I</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given an image extract all unique annotation cases by matching the unique (R,G,B) colour used. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy array</span>
+<span class="sd">        (n_rows x n_cols) binary dot image.</span>
+<span class="sd">    sigma : float</span>
+<span class="sd">        width of Gaussian used to smooth the annotation. Should be roughly the size of the object being detected. </span>
+<span class="sd">    thresh : float</span>
+<span class="sd">        intensity threshold to determine there is an annotation usually this is 0 for binary masks</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    im : numpy array</span>
+<span class="sd">        Gaussian smoothed blob image. Sum of pixels should = number of objects.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
+    
+    <span class="n">binary</span> <span class="o">=</span> <span class="n">img</span> <span class="o">&gt;</span> <span class="n">thresh</span>
+    <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">binary</span><span class="p">)</span>
+    <span class="n">regions</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
+    
+    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">binary</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">regions</span><span class="p">:</span>
+        <span class="n">y</span><span class="p">,</span><span class="n">x</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">centroid</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">im</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        
+    <span class="n">im</span> <span class="o">=</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;reflect&#39;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">im</span> </div>
+
+<div class="viewcode-block" id="create_dot_annotations"><a class="viewcode-back" href="../training.html#training.create_dot_annotations">[docs]</a><span class="k">def</span> <span class="nf">create_dot_annotations</span><span class="p">(</span><span class="n">xstack</span><span class="p">,</span> <span class="n">ystack</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">min_I</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given an image extract all unique annotation cases by matching the unique (R,G,B) colour used. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    xstack : numpy array</span>
+<span class="sd">        array of input gray or RGB images:</span>
+<span class="sd">            (n_imgs x n_rows x n_cols): gray image.</span>
+<span class="sd">            (n_imgs x n_rows x n_cols x 3): RGB image.</span>
+<span class="sd">    ystack : numpy array</span>
+<span class="sd">        array of corresponding annotation images for n different tasks, as represented by the number of image channels.</span>
+<span class="sd">            (n_imgs x n_cols x n_tasks): for n_tasks.</span>
+<span class="sd">    sigma : float</span>
+<span class="sd">        width of Gaussian used to smooth the annotation. Should be roughly the size of the object being detected. </span>
+<span class="sd">    min_I : int or float</span>
+<span class="sd">        intensity threshold to determine there is an annotation usually this is 0 for binary masks</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    x : numpy array</span>
+<span class="sd">        same array of input gray or RGB images matched to y.</span>
+<span class="sd">    y : numpy array </span>
+<span class="sd">        array of corresponding annotation images for n different tasks, as represented by the number of image channels with dot annotations now replaced with Gaussians.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">threshold_otsu</span><span class="p">,</span> <span class="n">gaussian</span>
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
+
+    <span class="n">y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ystack</span><span class="p">)):</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">ystack</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">dapi</span> <span class="o">=</span> <span class="n">xstack</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">im</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># its not blank</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">apply_gaussian_to_dots</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">min_I</span><span class="o">=</span><span class="n">min_I</span><span class="p">)</span>
+                <span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="kc">None</span><span class="p">,:])</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dapi</span><span class="p">[</span><span class="kc">None</span><span class="p">,:])</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># multiple channels. </span>
+            <span class="n">n_channels</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">im_out</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">im</span><span class="p">[:,:,</span><span class="n">j</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="n">apply_gaussian_to_dots</span><span class="p">(</span><span class="n">im</span><span class="p">[:,:,</span><span class="n">j</span><span class="p">],</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">min_I</span><span class="o">=</span><span class="n">thresh</span><span class="p">)</span>
+                    <span class="n">im_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">im_out</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_channels</span><span class="p">:</span> <span class="c1"># check all channels are represented. </span>
+                <span class="n">im_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">im_out</span><span class="p">)</span>
+                <span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">im_out</span><span class="p">[</span><span class="kc">None</span><span class="p">,:])</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dapi</span><span class="p">[</span><span class="kc">None</span><span class="p">,:])</span>
+        
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+    
+    
+<div class="viewcode-block" id="extract_dots"><a class="viewcode-back" href="../training.html#training.extract_dots">[docs]</a><span class="k">def</span> <span class="nf">extract_dots</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given an image extract all unique annotation cases by matching the unique (R,G,B) colour used. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy array</span>
+<span class="sd">        an input RGB image or input RGB image stack</span>
+<span class="sd">    color : tuple or list or numpy array</span>
+<span class="sd">        (R,G,B) tuple to match</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mask : bool numpy array</span>
+<span class="sd">        binary image mask of matched colour:</span>
+<span class="sd">            1. (n_rows x n_cols) for input RGB image</span>
+<span class="sd">            2. (n_imgs x n_rows x n_cols) for input RGB image stack</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">mask_r</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">mask_g</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">color</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">mask_b</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">color</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">mask_r</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">mask_g</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,:,:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">color</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">mask_b</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,:,:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">color</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">mask_r</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">mask_g</span><span class="p">,</span> <span class="n">mask_b</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">mask</span></div>
+
+<div class="viewcode-block" id="find_annot_centroids"><a class="viewcode-back" href="../training.html#training.find_annot_centroids">[docs]</a><span class="k">def</span> <span class="nf">find_annot_centroids</span><span class="p">(</span><span class="n">labelled</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given an integer method finds each individual object using different methods.</span>
+
+<span class="sd">    Two methods are implemented:</span>
+<span class="sd">        1) method = &#39;connected&#39;</span>
+<span class="sd">            uses connected component analysis to find unique objects</span>
+<span class="sd">        2) method = &#39;local_peaks&#39;</span>
+<span class="sd">            uses idea of watershed to resolve objects when they overlap. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    labelled : numpy array</span>
+<span class="sd">        an integer or binary thresholded image </span>
+<span class="sd">    method : string</span>
+<span class="sd">        either &#39;connected&#39; or &#39;local_peaks&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cents : numpy array</span>
+<span class="sd">        array of (y,x) coordinates of found object centroids.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">regionprops</span><span class="p">,</span> <span class="n">label</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
+    <span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="k">import</span> <span class="n">peak_local_max</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;connected&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">labelled_</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">labelled</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">labelled_</span> <span class="o">=</span> <span class="n">labelled</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">reg</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labelled_</span><span class="p">)</span>
+        
+        <span class="n">cents</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">re</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">:</span>
+            <span class="n">y</span><span class="p">,</span><span class="n">x</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">centroid</span>
+            <span class="n">cents</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">])</span>
+        <span class="n">cents</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cents</span>    
+    
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;local_peak&#39;</span><span class="p">:</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">binary</span><span class="p">)</span> <span class="c1"># smooth first.</span>
+        <span class="n">cents</span> <span class="o">=</span> <span class="n">peak_local_max</span><span class="p">(</span><span class="n">im</span><span class="p">)</span>
+    
+        <span class="k">return</span> <span class="n">cents</span> </div>
+        
+<div class="viewcode-block" id="annotations_to_dots"><a class="viewcode-back" href="../training.html#training.annotations_to_dots">[docs]</a><span class="k">def</span> <span class="nf">annotations_to_dots</span><span class="p">(</span><span class="n">xstack</span><span class="p">,</span> <span class="n">ystack</span><span class="p">,</span> <span class="n">min_I</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given image annotation, converts the annotation image to dot images where each dot is the centroid. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    xstack : numpy array</span>
+<span class="sd">        array of input gray or RGB images:</span>
+<span class="sd">            (n_imgs x n_rows x n_cols): gray image.</span>
+<span class="sd">            (n_imgs x n_rows x n_cols x 3): RGB image.</span>
+<span class="sd">    ystack : numpy array</span>
+<span class="sd">        array of corresponding annotation images for n different tasks, as represented by the number of image channels.</span>
+<span class="sd">            (n_imgs x n_cols x n_tasks): for n_tasks.</span>
+<span class="sd">    min_I : int or float</span>
+<span class="sd">        threshold cut-off for binarising annotation images. </span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cells : numpy array</span>
+<span class="sd">        matched input to `dots`.  </span>
+<span class="sd">    dots :</span>
+<span class="sd">        array same size as ystack with annotations converted to dots. </span>
+<span class="sd">    dists : </span>
+<span class="sd">        distance between manually marked centrioles </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="k">import</span> <span class="n">label</span><span class="p">,</span> <span class="n">regionprops</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">gaussian</span>
+    
+    <span class="n">cells</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># should this be default?</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ystack</span><span class="p">)):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">ystack</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]</span> <span class="c1"># pad extra channel</span>
+
+        <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span> <span class="n">n_channels</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span>
+        
+        <span class="n">y_out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dists_out</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">):</span>
+            <span class="n">labelled</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">y</span><span class="p">[:,:,</span><span class="n">j</span><span class="p">]</span><span class="o">&gt;</span><span class="n">min_I</span><span class="p">)</span> <span class="c1"># threshold.</span>
+            <span class="n">n_regions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labelled</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+            
+            <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n_regions</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="c1"># retrieve centroids of labelled regions. </span>
+                    <span class="n">cents</span> <span class="o">=</span> <span class="n">find_annot_centroids</span><span class="p">(</span><span class="n">labelled</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;connected&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># it should be 1 and we use local peaks to retrieve.</span>
+                    <span class="n">cents</span> <span class="o">=</span> <span class="n">find_annot_centroids</span><span class="p">(</span><span class="n">y</span><span class="o">&gt;</span><span class="n">min_I</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;local_peaks&#39;</span><span class="p">)</span>
+                    
+                <span class="c1"># check if centroids == 2. </span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">new_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+                    <span class="n">cents</span> <span class="o">=</span> <span class="n">cents</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">cent</span> <span class="ow">in</span> <span class="n">cents</span><span class="p">:</span>
+                        <span class="n">new_y</span><span class="p">[</span><span class="n">cent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cent</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+                    
+                    <span class="n">y_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_y</span><span class="p">)</span>
+                    <span class="n">dists_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cents</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">2</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># for other annotation channels. assume only 1 dot within.</span>
+                <span class="n">cents</span> <span class="o">=</span> <span class="n">find_annot_centroids</span><span class="p">(</span><span class="n">labelled</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;connected&#39;</span><span class="p">)</span>
+                <span class="n">new_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+                <span class="n">cents</span> <span class="o">=</span> <span class="n">cents</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">new_y</span><span class="p">[</span><span class="n">cents</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">cents</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="n">y_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_y</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_out</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_channels</span><span class="p">:</span>
+            <span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xstack</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">dots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">y_out</span><span class="p">)[</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">dists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">dists_out</span><span class="p">))</span>
+
+    <span class="n">cells</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">cells</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">dots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">dots</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cells</span><span class="p">,</span> <span class="n">dots</span><span class="p">,</span> <span class="n">dists</span></div>
+
+
+<div class="viewcode-block" id="train_test_split"><a class="viewcode-back" href="../training.html#training.train_test_split">[docs]</a><span class="k">def</span> <span class="nf">train_test_split</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">split_ratio</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">13337</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function wraps the elastic transform to apply it to a batch of images. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    imgs : numpy array</span>
+<span class="sd">        array of input gray or RGB images:</span>
+<span class="sd">            (n_imgs x n_rows x n_cols): gray image.</span>
+<span class="sd">            (n_imgs x n_rows x n_cols x 3): RGB image.</span>
+<span class="sd">    labels : numpy array</span>
+<span class="sd">        array of corresponding annotation images for n different tasks, as represented by the number of image channels.</span>
+<span class="sd">            (n_imgs x n_rows x n_cols x n_tasks): for n_tasks.</span>
+<span class="sd">    split_ratio : float</span>
+<span class="sd">        the train-test split ratio. If total number of available images is N, a split_ratio of 0.8 results in 0.8*N:0.2*N distribution of train:test images.</span>
+<span class="sd">    seed : int or None</span>
+<span class="sd">        optional setting of the random number generator for reproducibility.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    aug_imgs : numpy array</span>
+<span class="sd">        augmented image dataset, expanded N times. </span>
+<span class="sd">    aug_labels : numpy array</span>
+<span class="sd">        corresponding annotation image dataset, expanded N times. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    
+    <span class="n">select</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">select</span><span class="p">)</span>
+    
+    <span class="n">n_train</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split_ratio</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">select</span><span class="p">))</span>
+    
+    <span class="n">train_x</span> <span class="o">=</span> <span class="n">imgs</span><span class="p">[</span><span class="n">select</span><span class="p">[:</span><span class="n">n_train</span><span class="p">]]</span>
+    <span class="n">train_y</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">select</span><span class="p">[:</span><span class="n">n_train</span><span class="p">]]</span>
+
+    <span class="n">test_x</span> <span class="o">=</span> <span class="n">imgs</span><span class="p">[</span><span class="n">select</span><span class="p">[</span><span class="n">n_train</span><span class="p">:]]</span>
+    <span class="n">test_y</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">select</span><span class="p">[</span><span class="n">n_train</span><span class="p">:]]</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">),</span> <span class="p">(</span><span class="n">test_x</span><span class="p">,</span> <span class="n">test_y</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span> 
+    <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
+    <span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Model</span>
+    <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">merge</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">MaxPooling2D</span><span class="p">,</span> <span class="n">UpSampling2D</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">core</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Concatenate</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">Activation</span>
+    <span class="kn">from</span> <span class="nn">keras.optimizers</span> <span class="k">import</span> <span class="n">Adam</span>
+    <span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="k">import</span> <span class="n">imsave</span> 
+    <span class="kn">import</span> <span class="nn">os</span> 
+    <span class="kn">import</span> <span class="nn">cv2</span>
+    <span class="kn">from</span> <span class="nn">skimage.exposure</span> <span class="k">import</span> <span class="n">rescale_intensity</span>
+    <span class="kn">from</span> <span class="nn">skimage.filters</span> <span class="k">import</span> <span class="n">sobel</span>
+    <span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="nn">spio</span> 
+    
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1674</span><span class="p">)</span>
+    
+<span class="c1">#==============================================================================</span>
+<span class="c1">#   Load the files for training. </span>
+<span class="c1">#==============================================================================</span>
+    
+    <span class="n">Stage</span> <span class="o">=</span> <span class="s1">&#39;Late&#39;</span>
+    
+<span class="c1">#    labelfolder = &#39;../TrainingRB&#39;</span>
+<span class="c1">#    labelfolder = &#39;../Sectioned Training RB/Early S-phase&#39;</span>
+    <span class="n">labelfolder</span> <span class="o">=</span> <span class="s1">&#39;/media/felix/Elements/Raff Lab/Centriole Distancing/Sectioned Training RB/</span><span class="si">%s</span><span class="s1"> S-phase&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">Stage</span><span class="p">)</span>
+<span class="c1">#    imgfolder = &#39;Patch_train_64x64&#39;</span>
+    
+    <span class="c1"># first load in the image folder and then we can construct the specific names. </span>
+    <span class="n">imgpaths</span><span class="p">,</span> <span class="n">imgfiles</span> <span class="o">=</span> <span class="n">detect_img_files</span><span class="p">(</span><span class="n">labelfolder</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;.tif&#39;</span><span class="p">)</span>
+    
+    <span class="n">n_imgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgfiles</span><span class="p">)</span>
+    
+    <span class="n">X</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_imgs</span><span class="p">)[:]):</span>
+        <span class="c1"># read in the image. the 1st channel contains the raw..., the second contains the dot annotations. </span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">read_multiimg_PIL</span><span class="p">(</span><span class="n">imgpaths</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        
+        <span class="n">cells</span> <span class="o">=</span> <span class="n">im</span><span class="p">[:,:,:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dots</span> <span class="o">=</span> <span class="n">im</span><span class="p">[:,:,:,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">centres</span> <span class="o">=</span> <span class="n">im</span><span class="p">[:,:,:,</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cells</span><span class="p">)):</span>
+            <span class="c1"># iterate over the possible images. </span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dots</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cells</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
+                <span class="n">Y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dots</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
+                <span class="n">Z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">centres</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="kc">None</span><span class="p">,:])</span>
+                
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s1">&#39;---</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="nb">print</span> <span class="s1">&#39;number of total patches: </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    
+    <span class="n">Y_comb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">Y</span><span class="p">[:,:,:,</span><span class="kc">None</span><span class="p">],</span><span class="n">Z</span><span class="p">[:,:,:,</span><span class="kc">None</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y_comb_dots</span><span class="p">,</span> <span class="n">Dists</span> <span class="o">=</span> <span class="n">annotations_to_dots_multi</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y_comb</span><span class="p">)</span>
+    
+    <span class="c1"># create dots. </span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y_comb_dots</span> <span class="o">=</span> <span class="n">create_dot_annotations_multi</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y_comb_dots</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    
+    <span class="c1"># sample out a fraction of the training data for testing purposes. (for self validation.)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">13775</span><span class="p">)</span>
+    <span class="n">select</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">select</span><span class="p">)</span>
+    
+    <span class="n">to_keep</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">.</span><span class="mi">8</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+    
+    <span class="n">X_train</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">select</span><span class="p">[:</span><span class="n">to_keep</span><span class="p">]]</span>
+    <span class="n">Y_train</span> <span class="o">=</span> <span class="n">Y_comb</span><span class="p">[</span><span class="n">select</span><span class="p">[:</span><span class="n">to_keep</span><span class="p">]]</span>
+    <span class="n">D_train</span> <span class="o">=</span> <span class="n">Dists</span><span class="p">[</span><span class="n">select</span><span class="p">[:</span><span class="n">to_keep</span><span class="p">]]</span>
+    
+    <span class="n">X_test</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">select</span><span class="p">[</span><span class="n">to_keep</span><span class="p">:]]</span>
+    <span class="n">Y_test</span> <span class="o">=</span> <span class="n">Y_comb</span><span class="p">[</span><span class="n">select</span><span class="p">[</span><span class="n">to_keep</span><span class="p">:]]</span>
+    <span class="n">D_test</span> <span class="o">=</span> <span class="n">Dists</span><span class="p">[</span><span class="n">select</span><span class="p">[</span><span class="n">to_keep</span><span class="p">:]]</span>
+    
+    
+    <span class="c1"># save out (for safe keeping)</span>
+    <span class="n">spio</span><span class="o">.</span><span class="n">savemat</span><span class="p">(</span><span class="s1">&#39;Training_Testing_patches_sectioned-</span><span class="si">%s</span><span class="s1">.mat&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">Stage</span><span class="p">),</span> <span class="p">{</span><span class="s1">&#39;X_train&#39;</span><span class="p">:</span><span class="n">X_train</span><span class="p">,</span>
+                                                                        <span class="s1">&#39;Y_train&#39;</span><span class="p">:</span><span class="n">Y_train</span><span class="p">,</span>
+                                                                        <span class="s1">&#39;D_train&#39;</span><span class="p">:</span><span class="n">D_train</span><span class="p">,</span>
+                                                                        <span class="s1">&#39;X_test&#39;</span><span class="p">:</span><span class="n">X_test</span><span class="p">,</span>
+                                                                        <span class="s1">&#39;Y_test&#39;</span><span class="p">:</span><span class="n">Y_test</span><span class="p">,</span>
+                                                                        <span class="s1">&#39;D_test&#39;</span><span class="p">:</span><span class="n">D_test</span><span class="p">})</span>
+    
+    
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Felix Y. Zhou
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.1',
+              LANGUAGE:'en',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: ''
+          };
+      </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

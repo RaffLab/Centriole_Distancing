@@ -1,7 +1,7 @@
-Image Functions module
+Training module
 ===============
 
-.. automodule:: image_fn
+.. automodule:: training
     :members:
     :undoc-members:
     :show-inheritance:

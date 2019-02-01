@@ -1,7 +1,7 @@
-Image Functions module
+Distancing module
 ===============
 
-.. automodule:: image_fn
+.. automodule:: distancing
     :members:
     :undoc-members:
     :show-inheritance:

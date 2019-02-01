@@ -1,0 +1,763 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Training module &mdash; Centriole Distancing 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="next" title="Models module" href="models.html" />
+    <link rel="prev" title="image_fn module" href="image_fn.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Centriole Distancing
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="file_io.html">file_io module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_fn.html">image_fn module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Training module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">visualization module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Centriole Distancing</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Training module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/training.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-training">
+<span id="training-module"></span><h1>Training module<a class="headerlink" href="#module-training" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functions to aid in parsing of manual dot annotations for centriole distancing and functions to prepare the data for CNN training.</p>
+<dl class="function">
+<dt id="training.add_gamma">
+<code class="descclassname">training.</code><code class="descname">add_gamma</code><span class="sig-paren">(</span><em>img</em>, <em>gamma=0.3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#add_gamma"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.add_gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly adjust the image intensity using a gamma transform</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>input gray or RGB images with intensity in [0,1]:</dt>
+<dd><p class="first last">(n_imgs x n_cols): gray image.
+(n_imgs x n_cols x 3): RGB image.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>gamma</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">the adjustment range of gamma intensity. The applied gamma is uniformly sampled from [1-gamma, 1+gamma]</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>im</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">output image of same size as input image with intensity in [0,1]</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.add_noise">
+<code class="descclassname">training.</code><code class="descname">add_noise</code><span class="sig-paren">(</span><em>img</em>, <em>shift</em>, <em>sigma</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#add_noise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.add_noise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly add zero-mean Gaussian noise to the image + a random constant intensity change across the whole image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>input gray or RGB images with intensity in [0,1]:</dt>
+<dd><p class="first last">(n_imgs x n_cols): gray image.
+(n_imgs x n_cols x 3): RGB image.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>shift</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">the adjustment range of the constant intensity. The applied constant is uniformly sampled from [-shift, shift]</p>
+</dd>
+<dt><strong>sigma</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">width of Gaussian, defines the noise level.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>im</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">output image of same size as input image with intensity in [0,1]</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.annotations_to_dots">
+<code class="descclassname">training.</code><code class="descname">annotations_to_dots</code><span class="sig-paren">(</span><em>xstack</em>, <em>ystack</em>, <em>min_I=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#annotations_to_dots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.annotations_to_dots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given image annotation, converts the annotation image to dot images where each dot is the centroid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>xstack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of input gray or RGB images:</dt>
+<dd><p class="first last">(n_imgs x n_rows x n_cols): gray image.
+(n_imgs x n_rows x n_cols x 3): RGB image.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>ystack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of corresponding annotation images for n different tasks, as represented by the number of image channels.</dt>
+<dd><p class="first last">(n_imgs x n_cols x n_tasks): for n_tasks.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>min_I</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span><dd><p class="first last">threshold cut-off for binarising annotation images.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>cells</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">matched input to <cite>dots</cite>.</p>
+</dd>
+<dt><strong>dots :</strong></dt>
+<dd><p class="first last">array same size as ystack with annotations converted to dots.</p>
+</dd>
+<dt><strong>dists :</strong></dt>
+<dd><p class="first last">distance between manually marked centrioles</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.apply_elastic_transform">
+<code class="descclassname">training.</code><code class="descname">apply_elastic_transform</code><span class="sig-paren">(</span><em>imgs</em>, <em>labels</em>, <em>strength=0.08</em>, <em>N=50</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#apply_elastic_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.apply_elastic_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function wraps the elastic transform to apply it to a batch of images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imgs</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of input gray or RGB images:</dt>
+<dd><p class="first last">(n_imgs x n_rows x n_cols): gray image.
+(n_imgs x n_rows x n_cols x 3): RGB image.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>labels</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of corresponding annotation images for n different tasks, as represented by the number of image channels.</dt>
+<dd><p class="first last">(n_imgs x n_rows x n_cols x n_tasks): for n_tasks.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>strength</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">the strength of the stretching in the elastic transform, see <a class="reference internal" href="#training.elastic_transform" title="training.elastic_transform"><code class="xref py py-meth docutils literal"><span class="pre">elastic_transform()</span></code></a></p>
+</dd>
+<dt><strong>N</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">number of random deformations.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>aug_imgs</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">augmented image dataset, expanded N times.</p>
+</dd>
+<dt><strong>aug_labels</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">corresponding annotation image dataset, expanded N times.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r4bd9f18ee89e-simard2003" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[Simard2003]</a></td><td>Simard, Steinkraus and Platt, &#8220;Best Practices for
+Convolutional Neural Networks applied to Visual Document Analysis&#8221;, in
+Proc. of the International Conference on Document Analysis and
+Recognition, 2003.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.apply_elastic_transform_intensity">
+<code class="descclassname">training.</code><code class="descname">apply_elastic_transform_intensity</code><span class="sig-paren">(</span><em>imgs</em>, <em>labels</em>, <em>strength=0.08</em>, <em>shift=0.3</em>, <em>sigma_max=0.2</em>, <em>N=20</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#apply_elastic_transform_intensity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.apply_elastic_transform_intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function wraps the elastic transform as well as adding random noise and gamma adjustment to augment a batch of images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imgs</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of input gray or RGB images:</dt>
+<dd><p class="first last">(n_imgs x n_cols): gray image.
+(n_imgs x n_cols x 3): RGB image.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>labels</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of corresponding annotation images for n different tasks, as represented by the number of image channels.</dt>
+<dd><p class="first last">(n_imgs x n_cols x n_tasks): for n_tasks.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>strength</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">the strength of the stretching in the elastic transform, see <a class="reference internal" href="#training.elastic_transform" title="training.elastic_transform"><code class="xref py py-meth docutils literal"><span class="pre">elastic_transform()</span></code></a></p>
+</dd>
+<dt><strong>shift</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">the maximum shift in pixel intensity in addition to addition of Gaussian noise.</p>
+</dd>
+<dt><strong>sigma_max</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">defines the maximum standard deviation of the Gaussian noise corruption. The noise level added is a uniform variable on the range [0, sigma_max]</p>
+</dd>
+<dt><strong>N</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd><p class="first last">number of random deformations.</p>
+</dd>
+<dt><strong>random_state</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int or None</span><dd><p class="first last">optionally set a random seed for the random generation.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>aug_imgs</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">augmented image dataset, expanded N times.</p>
+</dd>
+<dt><strong>aug_labels</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">corresponding annotation image dataset, expanded N times.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.apply_gaussian_to_dots">
+<code class="descclassname">training.</code><code class="descname">apply_gaussian_to_dots</code><span class="sig-paren">(</span><em>img</em>, <em>sigma</em>, <em>min_I=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#apply_gaussian_to_dots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.apply_gaussian_to_dots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an image extract all unique annotation cases by matching the unique (R,G,B) colour used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">(n_rows x n_cols) binary dot image.</p>
+</dd>
+<dt><strong>sigma</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">width of Gaussian used to smooth the annotation. Should be roughly the size of the object being detected.</p>
+</dd>
+<dt><strong>thresh</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">intensity threshold to determine there is an annotation usually this is 0 for binary masks</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>im</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">Gaussian smoothed blob image. Sum of pixels should = number of objects.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.create_dot_annotations">
+<code class="descclassname">training.</code><code class="descname">create_dot_annotations</code><span class="sig-paren">(</span><em>xstack</em>, <em>ystack</em>, <em>sigma=5</em>, <em>min_I=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#create_dot_annotations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.create_dot_annotations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an image extract all unique annotation cases by matching the unique (R,G,B) colour used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>xstack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of input gray or RGB images:</dt>
+<dd><p class="first last">(n_imgs x n_rows x n_cols): gray image.
+(n_imgs x n_rows x n_cols x 3): RGB image.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>ystack</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of corresponding annotation images for n different tasks, as represented by the number of image channels.</dt>
+<dd><p class="first last">(n_imgs x n_cols x n_tasks): for n_tasks.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>sigma</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">width of Gaussian used to smooth the annotation. Should be roughly the size of the object being detected.</p>
+</dd>
+<dt><strong>min_I</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span><dd><p class="first last">intensity threshold to determine there is an annotation usually this is 0 for binary masks</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>x</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">same array of input gray or RGB images matched to y.</p>
+</dd>
+<dt><strong>y</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of corresponding annotation images for n different tasks, as represented by the number of image channels with dot annotations now replaced with Gaussians.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.elastic_transform">
+<code class="descclassname">training.</code><code class="descname">elastic_transform</code><span class="sig-paren">(</span><em>image</em>, <em>alpha</em>, <em>sigma</em>, <em>alpha_affine</em>, <em>random_state=None</em>, <em>borderMode='reflect'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#elastic_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.elastic_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Artificially augment the # of training images by elastic image transformations</p>
+<p>Based on <a class="reference external" href="https://gist.github.com/erniejunior/601cdf56d2b424757de5">https://gist.github.com/erniejunior/601cdf56d2b424757de5</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>image</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>input image, gray or RGB:</dt>
+<dd><p class="first last">(n_rows x n_cols): gray image
+(n_rows x n_cols x 3): RGB image</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>alpha</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">strength of deformation.</p>
+</dd>
+<dt><strong>sigma</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">size of Gaussian filter for anti-aliasing.</p>
+</dd>
+<dt><strong>sigma_affine</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">size of the random local deformations</p>
+</dd>
+<dt><strong>random_state</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">None or int</span><dd><p class="first last">integer seed for the random number generator, default: None</p>
+</dd>
+<dt><strong>borderMode :</strong></dt>
+<dd><p class="first last">the border method used when extrapolating as given by cv2.warpAffine</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>out</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>the warped image of the same resolution.</dt>
+<dd><p class="first last">(n_rows x n_cols): a gray-image.
+(n_rows x n_cols x 3): an RGB-image. 
+(n_rows x n_cols x 4): an RGBA-image.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r19feac2b7535-simard2003" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[Simard2003]</a></td><td>Simard, Steinkraus and Platt, &#8220;Best Practices for
+Convolutional Neural Networks applied to Visual Document Analysis&#8221;, in
+Proc. of the International Conference on Document Analysis and
+Recognition, 2003.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.extract_dots">
+<code class="descclassname">training.</code><code class="descname">extract_dots</code><span class="sig-paren">(</span><em>img</em>, <em>color</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#extract_dots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.extract_dots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an image extract all unique annotation cases by matching the unique (R,G,B) colour used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">an input RGB image or input RGB image stack</p>
+</dd>
+<dt><strong>color</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">tuple or list or numpy array</span><dd><p class="first last">(R,G,B) tuple to match</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>mask</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool numpy array</span><dd><dl class="first last docutils">
+<dt>binary image mask of matched colour:</dt>
+<dd><ol class="first last arabic simple">
+<li>(n_rows x n_cols) for input RGB image</li>
+<li>(n_imgs x n_rows x n_cols) for input RGB image stack</li>
+</ol>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.find_annot_centroids">
+<code class="descclassname">training.</code><code class="descname">find_annot_centroids</code><span class="sig-paren">(</span><em>labelled</em>, <em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#find_annot_centroids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.find_annot_centroids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an integer method finds each individual object using different methods.</p>
+<dl class="docutils">
+<dt>Two methods are implemented:</dt>
+<dd><ol class="first last arabic">
+<li><dl class="first docutils">
+<dt>method = &#8216;connected&#8217;</dt>
+<dd><p class="first last">uses connected component analysis to find unique objects</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>method = &#8216;local_peaks&#8217;</dt>
+<dd><p class="first last">uses idea of watershed to resolve objects when they overlap.</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>labelled</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">an integer or binary thresholded image</p>
+</dd>
+<dt><strong>method</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">string</span><dd><p class="first last">either &#8216;connected&#8217; or &#8216;local_peaks&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>cents</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">array of (y,x) coordinates of found object centroids.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.random_intensity">
+<code class="descclassname">training.</code><code class="descname">random_intensity</code><span class="sig-paren">(</span><em>img</em>, <em>shift=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#random_intensity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.random_intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly adjust the image intensity using a gamma transform</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>input gray or RGB images with intensity in [0,1]:</dt>
+<dd><p class="first last">(n_imgs x n_cols): gray image.
+(n_imgs x n_cols x 3): RGB image.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>shift</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">the adjustment range of intensity. The intensity change is additively applied and is uniformly sampled from [-shift, shift]</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>im</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">output image of same size as input image with intensity in [0,1]</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="training.train_test_split">
+<code class="descclassname">training.</code><code class="descname">train_test_split</code><span class="sig-paren">(</span><em>imgs</em>, <em>labels</em>, <em>split_ratio=0.8</em>, <em>seed=13337</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/training.html#train_test_split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#training.train_test_split" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function wraps the elastic transform to apply it to a batch of images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imgs</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of input gray or RGB images:</dt>
+<dd><p class="first last">(n_imgs x n_rows x n_cols): gray image.
+(n_imgs x n_rows x n_cols x 3): RGB image.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>labels</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><dl class="first last docutils">
+<dt>array of corresponding annotation images for n different tasks, as represented by the number of image channels.</dt>
+<dd><p class="first last">(n_imgs x n_rows x n_cols x n_tasks): for n_tasks.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>split_ratio</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd><p class="first last">the train-test split ratio. If total number of available images is N, a split_ratio of 0.8 results in 0.8*N:0.2*N distribution of train:test images.</p>
+</dd>
+<dt><strong>seed</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int or None</span><dd><p class="first last">optional setting of the random number generator for reproducibility.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>aug_imgs</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">augmented image dataset, expanded N times.</p>
+</dd>
+<dt><strong>aug_labels</strong></dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span><dd><p class="first last">corresponding annotation image dataset, expanded N times.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="models.html" class="btn btn-neutral float-right" title="Models module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="image_fn.html" class="btn btn-neutral" title="image_fn module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Felix Y. Zhou
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.1',
+              LANGUAGE:'en',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: ''
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

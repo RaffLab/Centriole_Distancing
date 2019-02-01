@@ -1,7 +1,7 @@
-Image Functions module
+Models module
 ===============
 
-.. automodule:: image_fn
+.. automodule:: models
     :members:
     :undoc-members:
     :show-inheritance:
