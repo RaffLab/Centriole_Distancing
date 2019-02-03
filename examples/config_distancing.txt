@@ -1,0 +1,25 @@
+[Experiment]
+infolder = ../Laura-Cep97-20190201
+savefolder = ../Laura-Cep97-20190201
+expt_key = Series
+early = 3
+late = -2
+
+[CNN]
+single_model = False
+CNN_model = 
+CNN_model_early = pretrained_models/Early_S_Phase/model_patch_32x32_aug_sigma2_raff_RB_mse_early
+CNN_model_mid = pretrained_models/Mid_S_Phase/model_patch_32x32_aug_sigma2_raff_RB_mse_mid
+CNN_model_late = pretrained_models/Late_S_Phase/model_patch_32x32_aug_sigma2_raff_RB_mse_late
+multiplier = 1000
+
+[Centriole_Distancing]
+min_I_CNN = None
+filt_I_CNN = True
+min_distance_CNN = 1
+dist_thresh_CNN = 15
+ratio_thresh_CNN = 4
+dist_thresh_GMM = 10
+n_samples_GMM = 1000
+debug_viz = True
+

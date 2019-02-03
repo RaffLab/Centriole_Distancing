@@ -188,6 +188,56 @@ def locate_files(infolder, key='.tif', exclude=None):
     return files
 
 
+def locate_experiment_series(infolder, key='Series'):
+    """Locate top-level experiment folders given a keyword.
+    
+    Parameters
+    ----------
+    infolder : string
+        top-level folder location of where the files can be found. The function will walk the entire subdirectories underneath.
+    key : string 
+        the keyword common to experiments. 
+
+    Returns
+    -------
+    dirs_ : numpy array
+        an array of sorted folderpaths.
+    """
+    import os 
+    dirs_ = []
+    
+    for root, dirs, files in os.walk(infolder):
+        for d in dirs:
+            if key in d:
+                dirs_.append(os.path.join(root, d))
+                
+    return np.sort(dirs_)
+    
+    
+def natsort_files( files, splitkey='_'):
+    """Sort the detected files in numerical order of acquisition based on integer naming. 
+    
+    Note: this function is not very generic at present. use regex instead. 
+
+    Parameters
+    ----------
+    files : string
+        filepaths
+    key : string 
+        the keyword common to experiments. 
+
+    Returns
+    -------
+    dirs_ : numpy array
+        an array of sorted folderpaths.
+    """
+    import os 
+    nums = np.hstack([int((os.path.split(f)[1]).split(splitkey)[0].split()[1]) for f in files])
+    sort_order = np.argsort(nums)
+    
+    return files[sort_order]
+
+
 def mkdir(directory):
     """Checks if given directory path exists, if not creates it.
     

@@ -209,7 +209,7 @@ def crop_patches_from_img(zstack, centroids, width=25):
     for cent in centroids:
         cent = cent.astype(np.int)
         
-        if len(zstack.shape) == 3:
+        if len(zstack.shape) == 3: # bug if this is a RGB image? 
             patch = zstack[:,cent[0]-width//2:cent[0]-width//2+width, cent[1]-width//2:cent[1]-width//2+width][None,:]
         else:
             patch = zstack[cent[0]-width//2:cent[0]-width//2+width, cent[1]-width//2:cent[1]-width//2+width][None,:]

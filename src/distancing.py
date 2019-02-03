@@ -178,7 +178,7 @@ def fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_
         xy_samples = img2histogram_samples(centre_patch_intensity, thresh=thresh, samples=n_samples)
     
     # fit the sample to GMM. 
-    (weights, means_, covars_), fitted_y, gmm = fit_2dGMM(xy_samples[:,0], xy_samples[:,1], component=2)
+    (weights, means_, covars_), fitted_y, gmm = fit_2dGMM(xy_samples[:,0], xy_samples[:,1], n_components=2)
     
     # get the centroids. 
     coords1 = means_[0]
@@ -198,7 +198,7 @@ def fitGMM_patch_post_process( centre_patch_intensity, n_samples=1000, max_dist_
         
         # now do the detection 
         xy_samples = img2histogram_samples(centre_patch_intensity_new, thresh=thresh, samples=n_samples)
-        (weights, means_, covars_), fitted_y, gmm = fit_2dGMM(xy_samples[:,0], xy_samples[:,1], component=2)
+        (weights, means_, covars_), fitted_y, gmm = fit_2dGMM(xy_samples[:,0], xy_samples[:,1], n_components=2)
         
         coords1 = means_[0]
         coords2 = means_[1]

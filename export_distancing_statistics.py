@@ -43,7 +43,7 @@ if __name__=="__main__":
     
     
 # =============================================================================
-#   Load files and set config parameters. 
+#   Check input and savefolder locations have been set.  
 # =============================================================================
     infolder = config['Experiment']['infolder']
     savefolder = config['Experiment']['savefolder']; fio.mkdir(savefolder)
@@ -82,9 +82,6 @@ if __name__=="__main__":
             else:
                 img = fio.read_stack_time_img(filename)
         
-        """
-        get the detections
-        """
         detections = image_fn.detect_centrioles_in_img(img, 
                                                        int(detect_['centriole_size']), 
                                                        aniso_params, 
@@ -105,12 +102,6 @@ if __name__=="__main__":
                                                        bg_dilation=int(bg_['bg_dilation']), 
                                                        bg_invalid_check=float(bg_['bg_invalid_check']), 
                                                        debug=debug)
-
-        """
-        given the detections, crop and get the stacks for each location. 
-        """
-        cropped_detections = image_fn.crop_patches_from_img(img, detections['centriole_centroids'], width=int(detect_['patch_size']))
-        detections['cropped_detections'] = cropped_detections
         
     # =============================================================================
     #   Save the outputs into .mat
