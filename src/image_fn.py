@@ -117,7 +117,6 @@ def perona_malik(img, iterations=10, delta=0.14, kappa=15):
     .. [1] Perona, P et. al, "Anisotropic diffusion." Geometry-driven diffusion in computer vision. Springer, Dordrecht, 1994. 73-92.
 
     """
-
     from scipy import misc, ndimage
     import numpy as np 
     # center pixel distances
@@ -209,7 +208,11 @@ def crop_patches_from_img(zstack, centroids, width=25):
 
     for cent in centroids:
         cent = cent.astype(np.int)
-        patch = zstack[:,cent[0]-width//2:cent[0]-width//2+width, cent[1]-width//2:cent[1]-width//2+width][None,:]
+        
+        if len(zstack.shape) == 3:
+            patch = zstack[:,cent[0]-width//2:cent[0]-width//2+width, cent[1]-width//2:cent[1]-width//2+width][None,:]
+        else:
+            patch = zstack[cent[0]-width//2:cent[0]-width//2+width, cent[1]-width//2:cent[1]-width//2+width][None,:]
         zs.append(patch)
         
     zs = np.concatenate(zs, axis=0)
@@ -528,12 +531,12 @@ def filter_centrioles_BCV(centroids, max_slice_im, patch_size, CV_thresh=0.3):
 
     """
     # signal (biological coefficient of variation filter)
-    patches = crop_patches_from_img(centrioles, max_slice_im, size=patch_size)
+    patches = crop_patches_from_img(max_slice_im, centroids, width=patch_size)
     snr_patches = np.hstack([np.std(p)/np.mean(p) for p in patches])
     
     # filter out the bogus detections? 
     select = snr_patches >= CV_thresh
-    filtered_centroids = centrioles[select]
+    filtered_centroids = centroids[select]
     filtered_CV = snr_patches[select]
     
     return filtered_centroids, select, filtered_CV
@@ -667,7 +670,7 @@ def detect_centrioles_in_img( zstack_img, size, aniso_params, patch_size, CV_thr
     #   Handle different file inputs.
     #
     ##########################################
-    if is_img_slice:
+    if is_img_slice==False:
         if tslice >= 0:
             zstack_time_img = zstack_img[tslice].copy()
         else:
@@ -687,7 +690,8 @@ def detect_centrioles_in_img( zstack_img, size, aniso_params, patch_size, CV_thr
     #   Gaussian blob detection (through TrackPy)
     ##########################################
     f = tp.locate(slice_img_denoise, size, separation=separation, invert=invert, minmass=minmass)
-
+    centriole_centroids = np.vstack([f['y'], f['x']]).T
+    
     if debug:
         """
         Viz 1 : initial detection
@@ -710,7 +714,6 @@ def detect_centrioles_in_img( zstack_img, size, aniso_params, patch_size, CV_thr
     Optionally filter out border centriole detections
     """
     if filter_border:
-        centriole_centroids = np.vstack([f['y'], f['x']]).T
 
         # filter the centroids ( don't care for those at the side. )
         centriole_centroids, centriole_centroids_filter = filter_border_centroids_detection(centriole_centroids, size=size, limits = slice_img.shape)

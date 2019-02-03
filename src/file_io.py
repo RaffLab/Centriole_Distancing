@@ -8,6 +8,27 @@ This module contains scripts for file input/output manipulation.
 import numpy as np 
 import image_fn
 
+def parse_config(configfile):
+
+    import configparser
+    config = configparser.ConfigParser()
+    
+    f = open(configfile, 'r') # open as an iterable. 
+    config.read_file(f)
+    print('read configuration file')
+
+    return config
+
+def save_obj(obj, savepath ):
+    import pickle
+    with open(savepath, 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_obj(loadpath ):
+    import pickle
+    with open(loadpath, 'rb') as f:
+        return pickle.load(f)
+
 def read_rgb(imgfile):
     """Reads RGB image file
 

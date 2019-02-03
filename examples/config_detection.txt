@@ -1,0 +1,33 @@
+[Experiment]
+infolder = /home/felix/Downloads/Cycle 12 - Cep97 in Cep104 half dose
+savefolder = Laura-Cep97-20190201
+
+[Input]
+tslice = -1
+is_img_slice = False
+
+[Centriole_Detection]
+centriole_size = 25
+patch_size = 32
+# trackpy parameters
+centriole_separation = 5
+img_invert = False
+centriole_minmass = 10
+minoverlap = 15
+filter_border = True
+filter_high_intensity_bg = True
+remove_duplicates = True
+filter_CV = True
+CV_thresh = 0.3
+debug_detections = False
+
+[Anisotropic_Image_Filter]
+delta = 0.14
+kappa = 15
+iterations = 5
+
+[Background_Filter]
+bg_min_I = 0.2
+bg_max_area = 1000
+bg_dilation = 3
+bg_invalid_check = 0.5
