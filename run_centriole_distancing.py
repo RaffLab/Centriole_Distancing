@@ -87,20 +87,20 @@ if __name__=="__main__":
         pklfiles = fio.locate_files(infolder, key='detections.pkl') #looking for a particular signature. 
         print('Found %d centriole detection files' %(len(pklfiles)))
 
-
+        #################
         # do distancing 
-
+        #################
 
     else:
         expts = fio.locate_experiment_series(infolder, key=config['Experiment']['expt_key'])
         
-        for expt in expts[:1]:
+        for expt in tqdm(expts[:]):
             pklfiles = fio.locate_files(expt, key='detections.pkl')
             pklfiles = fio.natsort_files(pklfiles, splitkey='_')
 
             n_files = len(pklfiles)
 
-            for i in range(n_files)[:1]:
+            for i in range(n_files)[:]:
                 filename = pklfiles[i]  
                 basename = os.path.split(filename)[-1]
                 saveimgfolder = filename.replace('.pkl', '') # same folder as detections.

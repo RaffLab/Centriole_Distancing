@@ -1,0 +1,5 @@
+[Experiment]
+infolder = ../Laura-Cep97-20190201
+savefolder = ../Laura-Cep97-20190201/compiled_dist_results
+expt_key = Series
+image_key = Image

@@ -9,6 +9,13 @@ These instructions will provide you with a copy of the project up and running on
 
 
 ### Example Usage
+The easiest way to use the library of functions is to see provided example pipelines under 'Examples/' folder. The recommended way is to use config files to set the experimental parameters. Inside 'Examples' there are three scripts:
+
+Script Name | Function
+------------| -------------
+`run_centriole_detection.py` | Content from cell 2
+`run_centriole_distancing.py` | Content in the second column
+`export_distancing_statistics.py` | Content in the second column
 
 
 ### Training Your Own Models

@@ -188,7 +188,7 @@ def locate_files(infolder, key='.tif', exclude=None):
     return files
 
 
-def locate_experiment_series(infolder, key='Series'):
+def locate_experiment_series(infolder, key='Series', exclude=None):
     """Locate top-level experiment folders given a keyword.
     
     Parameters
@@ -209,12 +209,19 @@ def locate_experiment_series(infolder, key='Series'):
     for root, dirs, files in os.walk(infolder):
         for d in dirs:
             if key in d:
-                dirs_.append(os.path.join(root, d))
+                if exclude is not None:
+                    val = 0
+                    for ex in exclude:
+                        val+=int(ex in root)
+                    if val == 0:
+                        dirs_.append(os.path.join(root, d))
+                else:
+                    dirs_.append(os.path.join(root, d))
                 
     return np.sort(dirs_)
     
     
-def natsort_files( files, splitkey='_'):
+def natsort_files( files, key='Image ', return_num=False):
     """Sort the detected files in numerical order of acquisition based on integer naming. 
     
     Note: this function is not very generic at present. use regex instead. 
@@ -232,10 +239,23 @@ def natsort_files( files, splitkey='_'):
         an array of sorted folderpaths.
     """
     import os 
-    nums = np.hstack([int((os.path.split(f)[1]).split(splitkey)[0].split()[1]) for f in files])
+    import re
+
+    nums = []
+
+    for f in files:
+        _, fname = os.path.split(f)
+        num = re.findall(r'%s\d+' %(key), fname)[0]
+        num = int(num.split(key)[1])
+        nums.append(num)
+    # nums = np.hstack([int((os.path.split(f)[1]).split(splitkey)[0].split()[1]) for f in files])
+    nums = np.hstack(nums)
     sort_order = np.argsort(nums)
     
-    return files[sort_order]
+    if return_num:
+        return files[sort_order], nums[sort_order]
+    else:
+        return files[sort_order]
 
 
 def mkdir(directory):
