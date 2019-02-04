@@ -15,6 +15,10 @@ The easiest way to get started is to download and install [Anaconda](https://www
 * keras : `sudo conda install keras==2.0.8` (only tested on this ver. others may work)
 * tensorflow : `sudo conda install tensorflow-gpu==1.2.0` (only test on this ver. others may work)
 
+After installing these prerequisites. The package can be installed using pip by running the following in the cloned GitHub folder:
+```
+sudo pip setup.py install
+```
 
 ### Example Usage
 The easiest way to use the library of functions is to see provided example pipelines under 'Examples/' folder. The recommended way is to use config files to set the experimental parameters. Inside 'Examples' there are three scripts:
